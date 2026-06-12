@@ -1,0 +1,13 @@
+{
+  "categories": [
+    { "id": "all", "name": "All Cards", "icon": "⭐" },
+    { "id": "animals", "name": "Animals", "icon": "🦁" },
+    { "id": "numbers", "name": "Numbers", "icon": "🔢" },
+    { "id": "colors", "name": "Colors", "icon": "🎨" }
+  ],
+  "words": [
+    { "id": "1", "category": "animals", "en": "Dog", "hmo": "Aub", "es": "Perro", "media": "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=400", "mediaType": "image", "audioDataUrl": null },
+    { "id": "2", "category": "animals", "en": "Cat", "hmo": "Miv", "es": "Gato", "media": "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=400", "mediaType": "image", "audioDataUrl": null },
+    { "id": "4", "category": "colors", "en": "Red", "hmo": "Liab", "es": "Rojo", "media": "https://images.unsplash.com/photo-1508169351866-7b7fc003f4f1?w=400", "mediaType": "image", "audioDataUrl": null }
+  ]
+}
