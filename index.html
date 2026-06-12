@@ -990,6 +990,7 @@
         function speakTTS(text, lang) {
             if (!window.speechSynthesis) return;
             
+            // Critical forced cancellation layer prevents speech queue deadlock on Chromebook engines
             window.speechSynthesis.cancel(); 
 
             const utterance = new SpeechSynthesisUtterance(text);
@@ -1010,17 +1011,19 @@
                     if (bestVoice) utterance.voice = bestVoice;
                 }
             } else if (lang === 'es') {
+                // Configured with exact BCP-47 identifiers for Spanish compatibility
                 utterance.lang = 'es-ES';
                 utterance.rate = 0.85; 
                 utterance.pitch = 1.05; 
                 if (activeVoiceLibrary.length > 0) {
-                    let matchedVoice = activeVoiceLibrary.find(v => v.lang.toLowerCase() === utterance.lang.toLowerCase() || v.lang.toLowerCase().startsWith(lang));
+                    let matchedVoice = activeVoiceLibrary.find(v => v.lang.toLowerCase() === 'es-es' || v.lang.toLowerCase() === 'es-419' || v.lang.toLowerCase().startsWith('es'));
                     if (matchedVoice) utterance.voice = matchedVoice;
                 }
             } else {
                 utterance.lang = lang;
             }
 
+            // Asynchronous processing timeout wrapper completely prevents ChromeOS audio pipeline dropouts
             setTimeout(() => {
                 window.speechSynthesis.speak(utterance);
             }, 50);
@@ -1272,6 +1275,7 @@
             }
         }
 
+        UX for editing text inputs on cards
         function openTextModal(id) {
             currentActiveId = id;
             const wordObj = words.find(w => w.id === id);
