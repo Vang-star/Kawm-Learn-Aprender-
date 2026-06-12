@@ -440,23 +440,40 @@
             border-radius: 10px;
         }
 
+        /* SCREEN FIXES FOR QUIZ SYSTEM WINDOWS */
+        #quiz-setup-modal .modal-card,
         #quiz-gameplay-modal .modal-card {
             max-width: 440px !important; 
-            padding: 20px !important;   
+            padding: 15px !important;   
+            max-height: 85vh !important;
+            overflow-y: auto !important;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #quiz-setup-modal h2,
+        #quiz-gameplay-modal .quiz-score-banner {
+            margin-bottom: 8px !important;
+        }
+
+        #quiz-setup-modal p {
+            margin: 0 0 12px 0 !important;
         }
 
         .quiz-image-frame {
             width: 100%; 
-            min-height: 200px;
-            max-height: 280px;
+            height: 25vh;
+            min-height: 140px;
+            max-height: 200px;
             background: #f0f0f0; 
             border-radius: 18px; 
             overflow: hidden; 
-            margin-bottom: 15px;
+            margin-bottom: 10px;
             border: 3px solid #e0e0e0; 
             display: flex; 
             align-items: center; 
             justify-content: center;
+            flex-shrink: 0;
         }
         .quiz-image-frame img, .quiz-image-frame video {
             width: 100%; 
@@ -464,57 +481,74 @@
             object-fit: contain;
             background: #f0f0f0;
         }
+        
         .quiz-options-stack {
-            display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px;
+            display: flex; 
+            flex-direction: column; 
+            gap: 8px; 
+            margin-bottom: 10px;
+            flex-grow: 1;
         }
         
         .quiz-choice-btn {
             background: #ffffff !important; 
             border: 3px solid #ccc !important; 
-            font-size: 1.2rem !important; 
+            font-size: 1.1rem !important; 
             font-weight: bold !important;
             color: var(--dark) !important;
-            padding: 10px; 
+            padding: 8px !important; 
             border-radius: 12px; 
             width: 100%; 
-            box-shadow: 0 4px 0 #bbb; 
+            box-shadow: 0 3px 0 #bbb; 
             text-align: center;
             cursor: pointer;
+            margin: 0 !important;
         }
         .quiz-choice-btn.selected-choice {
             background-color: var(--accent) !important;
             border-color: #eed23b !important;
-            box-shadow: 0 4px 0 #eed23b !important;
+            box-shadow: 0 3px 0 #eed23b !important;
         }
         .quiz-choice-btn.correct-choice {
-            background-color: #2ed573 !important; border-color: #1abc9c !important; color: white !important; box-shadow: 0 4px 0 #158443 !important;
+            background-color: #2ed573 !important; border-color: #1abc9c !important; color: white !important; box-shadow: 0 3px 0 #158443 !important;
         }
         .quiz-choice-btn.wrong-choice {
-            background-color: #ff4757 !important; border-color: #c0392b !important; color: white !important; box-shadow: 0 4px 0 #962d35 !important;
+            background-color: #ff4757 !important; border-color: #c0392b !important; color: white !important; box-shadow: 0 3px 0 #962d35 !important;
         }
+        
         .btn-submit-answer {
             background-color: #ffb142;
-            box-shadow: 0 5px 0 #cc8e35;
-            font-size: 1.2rem;
+            box-shadow: 0 4px 0 #cc8e35;
+            font-size: 1.1rem;
             width: 100%;
-            padding: 10px;
+            padding: 8px;
             border-radius: 12px;
             color: white;
             font-weight: bold;
-            margin-bottom: 5px;
+            margin: 0 0 6px 0 !important;
+            flex-shrink: 0;
         }
+        
         .quiz-score-banner {
-            font-size: 1.1rem; font-weight: bold; color: var(--dark); margin-bottom: 8px;
+            font-size: 1.1rem; font-weight: bold; color: var(--dark); margin-bottom: 8px; flex-shrink: 0;
         }
         .quiz-config-label {
-            font-weight: bold; margin-bottom: 6px; display: block; color: var(--dark); text-align: left;
+            font-weight: bold; margin-bottom: 4px; display: block; color: var(--dark); text-align: left;
         }
         .quiz-lang-selector {
-            width: 100%; padding: 10px; font-size: 1rem; font-weight: bold; background: #fff;
-            border: 3px solid var(--secondary); border-radius: 12px; margin-bottom: 15px;
+            width: 100%; padding: 8px; font-size: 1rem; font-weight: bold; background: #fff;
+            border: 3px solid var(--secondary); border-radius: 12px; margin-bottom: 12px;
         }
         .btn-start-game {
-            background-color: #2ed573; box-shadow: 0 5px 0 #21a455; font-size: 1.2rem; width: 100%; padding: 10px; border-radius: 12px;
+            background-color: #2ed573; box-shadow: 0 4px 0 #21a455; font-size: 1.1rem; width: 100%; padding: 8px; border-radius: 12px; flex-shrink: 0; margin: 0 !important;
+        }
+        
+        #quiz-setup-modal .btn-close,
+        #quiz-gameplay-modal .btn-close {
+            margin-top: 6px !important;
+            padding: 8px !important;
+            font-size: 1.1rem !important;
+            flex-shrink: 0;
         }
     </style>
 </head>
@@ -672,7 +706,7 @@
     <div class="modal-overlay" id="quiz-setup-modal">
         <div class="modal-card">
             <h2>🎮 Game Mode Setup</h2>
-            <p style="margin-bottom:15px; font-size: 0.95rem;">Pick your categories and language to practice!</p>
+            <p>Pick your categories and language to practice!</p>
             
             <label class="quiz-config-label">📁 Choose Topic / Category:</label>
             <select class="quiz-lang-selector" id="quiz-category-config"></select>
@@ -687,7 +721,7 @@
             </select>
 
             <button class="btn-start-game" onclick="initiateQuizGameplayLoop()">Start Game! 🚀</button>
-            <button class="btn-close" onclick="closeQuizSetupModal()">Close ❌</button>
+            <button class="btn-close" style="background:#e74c3c; border-radius:12px; color:white; font-weight:bold;" onclick="closeQuizSetupModal()">Close ❌</button>
         </div>
     </div>
 
@@ -695,10 +729,10 @@
         <div class="modal-card">
             <div class="quiz-score-banner" id="quiz-progress-text">Question 0 of 0</div>
             <div class="quiz-image-frame" id="quiz-media-display-frame"></div>
-            <p style="font-weight:bold; font-size:1.1rem; margin-top:0;" id="quiz-instruction-prompt">Click the correct word!</p>
+            <p style="font-weight:bold; font-size:1.1rem; margin: 0 0 10px 0; text-align:center;" id="quiz-instruction-prompt">Click the correct word!</p>
             <div class="quiz-options-stack" id="quiz-choices-stack-box"></div>
             <button class="btn-submit-answer" id="quiz-check-btn" onclick="submitSelectedQuizAnswer()">✔️ Check Answer</button>
-            <button class="btn-close" style="background:#e74c3c; width:100%; border-radius:12px; padding:10px; font-size:1.1rem;" onclick="terminateQuizGameplayLoop()">Exit Game 🛑</button>
+            <button class="btn-close" style="background:#e74c3c; width:100%; border-radius:12px; color:white; font-weight:bold;" onclick="terminateQuizGameplayLoop()">Exit Game 🛑</button>
         </div>
     </div>
 
