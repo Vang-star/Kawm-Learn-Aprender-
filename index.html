@@ -390,7 +390,7 @@
             resize: none;
         }
 
-        /* --- MINI INTERACTIVE QUIZ WINDOW ENGINE --- */
+        /* --- INTERACTIVE QUIZ MODAL ARCHITECTURE --- */
         #quiz-gameplay-modal .modal-card {
             max-width: 380px !important; 
             padding: 20px !important;   
@@ -726,7 +726,6 @@
             
             addDropdown.innerHTML = ''; moveDropdown.innerHTML = ''; quizDropdown.innerHTML = '';
 
-            // Add comprehensive "All" choice directly inside game selector
             const allOpt = document.createElement('option'); allOpt.value = 'all'; allOpt.innerText = "⭐ Mix All Categories Together";
             quizDropdown.appendChild(allOpt);
 
@@ -892,16 +891,17 @@
             document.getElementById('add-media').value = '';
         }
 
-        // --- 5. ROBUST HYBRID TEXT-TO-SPEECH (TTS) SYSTEM FOR MOBILE & TABLETS ---
+        // --- 5. FIXED SMOOTH CHROMEBOOK CROSS-DEVICE SPEECH ENGINE ---
         function speakTTS(text, lang) {
             if (!window.speechSynthesis) return;
-            window.speechSynthesis.cancel(); // Terminate hanging cues immediately
+            
+            // Chromebook Fix: Always cancel hanging processing instances instantly
+            window.speechSynthesis.cancel(); 
 
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.rate = 0.85; 
             utterance.pitch = 1.05; 
             
-            // Map clean locales explicitly to bypass hidden engine crashes on iOS or Android WebViews
             if (lang === 'en') {
                 utterance.lang = 'en-US';
             } else if (lang === 'es') {
@@ -910,22 +910,40 @@
                 utterance.lang = lang;
             }
 
-            // Cross-device voice search loop
+            // High-Quality Voice Match Loop (Crucial for smooth English speech on ChromeOS)
             if (window.speechSynthesis.getVoices) {
                 const systemVoices = window.speechSynthesis.getVoices();
-                let matchedVoice = systemVoices.find(v => v.lang.toLowerCase() === utterance.lang.toLowerCase() || v.lang.toLowerCase().startsWith(lang));
-                if (matchedVoice) utterance.voice = matchedVoice;
+                
+                // Prioritize smooth local Google synthesis strings over basic system fallbacks
+                let optimalVoice = systemVoices.find(v => 
+                    v.lang.toLowerCase() === utterance.lang.toLowerCase() && 
+                    (v.name.toLowerCase().includes('google') || v.name.toLowerCase().includes('natural'))
+                );
+                
+                if (!optimalVoice) {
+                    optimalVoice = systemVoices.find(v => v.lang.toLowerCase().startsWith(lang));
+                }
+                
+                if (optimalVoice) utterance.voice = optimalVoice;
             }
 
-            window.speechSynthesis.speak(utterance);
+            // Chromebook Fix: Encapsulate speech execute in a macro-timeout block to bypass sudden ChromeOS drops
+            setTimeout(() => {
+                window.speechSynthesis.speak(utterance);
+            }, 30);
         }
 
-        // Force-refresh browser audio channels on first tap interaction
-        document.body.addEventListener('click', () => {
-            if (window.speechSynthesis && window.speechSynthesis.getVoices) {
+        // Prime Chromebook audio pipes on user interaction event
+        function primeChromebookAudioChannels() {
+            if (window.speechSynthesis) {
                 window.speechSynthesis.getVoices();
+                // Play a brief silent string to clear ChromeOS audio sleep threads
+                const primer = new SpeechSynthesisUtterance('');
+                window.speechSynthesis.speak(primer);
             }
-        }, { once: true });
+        }
+        document.body.addEventListener('click', primeChromebookAudioChannels, { once: true });
+        document.body.addEventListener('touchstart', primeChromebookAudioChannels, { once: true });
 
         // --- 6. INTERACTIVE GAME MODE ENGINE ---
         function openQuizSetupModal(catId) {
@@ -1097,11 +1115,6 @@
             }, 1800);
         }
 
-        function terminateQuizGameplayLoop() {
-            document.getElementById('quiz-gameplay-modal').classList.remove('active');
-            window.speechSynthesis.cancel();
-        }
-
         // --- 7. MANAGEMENT HANDLERS ---
         function openAudioModal(id) {
             currentActiveId = id;
@@ -1197,6 +1210,11 @@
                 };
                 reader.readAsDataURL(file);
             }
+        }
+
+        function terminateQuizGameplayLoop() {
+            document.getElementById('quiz-gameplay-modal').classList.remove('active');
+            window.speechSynthesis.cancel();
         }
 
         // Initialize application build data
