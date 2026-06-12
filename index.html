@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kids Multilingual Flashcards (Cloud Edition)</title>
+    <title>Kids Multilingual Flashcards (GitHub JSON Edition)</title>
     <style>
         :root {
             --primary: #ff6b6b;
@@ -365,16 +365,22 @@
         .btn-close { background-color: #95a5a6; box-shadow: 0 4px 0 #7f8c8d; margin-top: 20px; }
         .btn-close:active { transform: translateY(4px); box-shadow: none; }
         .btn-save-edit { background-color: #2ed573; box-shadow: 0 4px 0 #26af5f; width: 100%; font-size: 1.1rem; margin-top: 15px;}
+        
+        .export-output-box {
+            width: 100%; height: 120px;
+            font-family: monospace; font-size: 0.85rem;
+            border: 2px solid #ccc; border-radius: 10px;
+            padding: 8px; box-sizing: border-box;
+            background: #fafafa; margin-top: 10px;
+            resize: none;
+        }
     </style>
-
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
     <header>
         <h1>🌟 Kawm / Learn / Aprender! 🌟</h1>
-        <p id="header-instructions">Welcome! Tap languages to hear them or drag cards directly onto categories to sort them instantly over the cloud!</p>
+        <p id="header-instructions">Welcome! Tap languages to hear them or drag cards directly onto categories to sort them instantly!</p>
     </header>
 
     <div class="mode-toggle-container">
@@ -382,6 +388,13 @@
     </div>
 
     <div class="creator-flex">
+        <div class="creator-panel" id="export-panel" style="border: 4px dashed #a55eea;">
+            <h3>💾 Save Card Changes to GitHub</h3>
+            <p style="font-size:0.9rem; margin: 0 0 10px 0;">To save modifications forever, click the button below to generate your updated code file, copy it, and paste it inside your <strong>flashcards.json</strong> file on GitHub!</p>
+            <button onclick="generateCleanJsonBlock()" style="background:#a55eea; box-shadow: 0 4px 0 #783cb5; width:100%;">🔄 Generate Clean JSON File Code</button>
+            <textarea id="json-export-area" class="export-output-box" placeholder="Your file data will appear here..." readonly></textarea>
+        </div>
+
         <div class="creator-panel" id="category-panel">
             <h3>📂 Create a New Category</h3>
             <div class="form-row-split">
@@ -405,15 +418,15 @@
             </div>
             <div class="form-group">
                 <label>Type English Word:</label>
-                <input type="text" id="add-en" placeholder="e.g., Elephant..." oninput="handleAutoTranslationInput()">
+                <input type="text" id="add-en" placeholder="e.g., Elephant..." oninput="handleDualAutoTranslation()">
             </div>
             <div class="form-group">
-                <label>Hmong Translation (Manual Entry):</label>
-                <input type="text" id="add-hmo" placeholder="Hmong word...">
+                <label>Hmong Translation (Auto-translating...):</label>
+                <input type="text" id="add-hmo" placeholder="Hmong word will appear...">
             </div>
             <div class="form-group">
                 <label>Spanish Translation (Auto-translating...):</label>
-                <input type="text" id="add-es" placeholder="Spanish word...">
+                <input type="text" id="add-es" placeholder="Spanish word will appear...">
             </div>
             <div class="form-group">
                 <label>Upload custom image/video (Optional):</label>
@@ -471,20 +484,7 @@
     </div>
 
     <script>
-        // --- 1. FIREBASE INITIALIZATION ---
-        const firebaseConfig = {
-            apiKey: "AIzaSyBECu9LSIDyEGADHFb3ZU04JnWOmGXl24s",
-            authDomain: "english-hmong-spanish-cards.firebaseapp.com",
-            projectId: "english-hmong-spanish-cards",
-            storageBucket: "english-hmong-spanish-cards.firebasestorage.app",
-            messagingSenderId: "255023339150",
-            appId: "1:255023339150:web:fea93c73308f89762c1bdf"
-        };
-
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-
-        // Local UI State Trackers
+        // --- 1. LOCAL DATA SYSTEM STATE ---
         let words = [];
         let categories = [];
         let activeFilterCategoryId = "all";
@@ -496,51 +496,43 @@
         let translationDebounceTimer = null;
         let activeCloudAudioStream = null; 
 
-        const hmongBackupDictionary = {
-            "dog": "Aub", "cat": "Miv", "bird": "Noog", "frog": "Qav", "pig": "Npua", 
-            "chicken": "Qaib", "fish": "Ntses", "red": "Liab", "blue": "Xiav", "green": "Ntsuab", 
-            "yellow": "Daj", "white": "Dawb", "black": "Dub", "one": "Ib", "two": "Ob", 
-            "three": "Peb", "four": "Plaub", "five": "Tsib"
-        };
-
-        function startCloudSync() {
-            db.collection("categories").onSnapshot((snapshot) => {
-                let cloudCats = [];
-                snapshot.forEach(doc => cloudCats.push(doc.data()));
-                
-                if (cloudCats.length === 0) {
-                    const defaults = [
-                        { id: "all", name: "All Cards", icon: "⭐" },
-                        { id: "animals", name: "Animals", icon: "🦁" },
-                        { id: "numbers", name: "Numbers", icon: "🔢" },
-                        { id: "colors", name: "Colors", icon: "🎨" }
-                    ];
-                    defaults.forEach(c => db.collection("categories").doc(c.id).set(c));
-                } else {
-                    categories = cloudCats;
-                    renderCategoryFilters();
-                    populateCategorySelectDropdowns();
-                }
-            });
-
-            db.collection("flashcards").onSnapshot((snapshot) => {
-                let cloudWords = [];
-                snapshot.forEach(doc => cloudWords.push(doc.data()));
-                
-                if (cloudWords.length === 0 && words.length === 0) {
-                    const starters = [
-                        { id: "1", category: "animals", en: "Dog", hmo: "Aub", es: "Perro", media: "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=400", mediaType: "image", audioDataUrl: null },
-                        { id: "2", category: "animals", en: "Cat", hmo: "Miv", es: "Gato", media: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=400", mediaType: "image", audioDataUrl: null },
-                        { id: "4", category: "colors", en: "Red", hmo: "Liab", es: "Rojo", media: "https://images.unsplash.com/photo-1508169351866-7b7fc003f4f1?w=400", mediaType: "image", audioDataUrl: null }
-                    ];
-                    starters.forEach(w => db.collection("flashcards").doc(w.id).set(w));
-                } else {
-                    words = cloudWords;
-                    renderCards();
-                }
-            });
+        // --- 2. GITHUB JSON INPUT LOADER ---
+        async function fetchMasterJsonData() {
+            try {
+                const response = await fetch('flashcards.json?nocache=' + Date.now());
+                const data = await response.json();
+                categories = data.categories || [];
+                words = data.words || [];
+            } catch (err) {
+                console.log("Could not load flashcards.json. Using starter defaults.", err);
+                categories = [
+                    { id: "all", name: "All Cards", icon: "⭐" },
+                    { id: "animals", name: "Animals", icon: "🦁" },
+                    { id: "numbers", name: "Numbers", icon: "🔢" },
+                    { id: "colors", name: "Colors", icon: "🎨" }
+                ];
+                words = [
+                    { id: "1", category: "animals", en: "Dog", hmo: "Aub", es: "Perro", media: "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=400", mediaType: "image", audioDataUrl: null }
+                ];
+            }
+            renderCategoryFilters();
+            populateCategorySelectDropdowns();
+            renderCards();
         }
 
+        function generateCleanJsonBlock() {
+            const packageObj = { categories: categories, words: words };
+            const jsonString = JSON.stringify(packageObj, null, 2);
+            
+            const txtArea = document.getElementById('json-export-area');
+            txtArea.value = jsonString;
+            txtArea.select();
+            
+            navigator.clipboard.writeText(jsonString);
+            alert("Code generated and copied automatically! Paste this inside your flashcards.json file on GitHub.");
+        }
+
+        // --- 3. UI RENDERING PIPELINE ---
         function renderCategoryFilters() {
             const filterRow = document.getElementById('category-filters-row');
             filterRow.innerHTML = '';
@@ -558,15 +550,13 @@
 
                 button.ondragover = (e) => { e.preventDefault(); if (cat.id !== 'all') button.classList.add('drag-over'); };
                 button.ondragleave = () => button.classList.remove('drag-over');
-                button.ondrop = async (e) => {
+                button.ondrop = (e) => {
                     e.preventDefault();
                     button.classList.remove('drag-over');
                     if (cat.id === 'all') return;
                     
                     const cardIdStr = e.dataTransfer.getData('text/plain');
-                    if (cardIdStr) {
-                        await moveCardToCategory(cardIdStr, cat.id);
-                    }
+                    if (cardIdStr) moveCardToCategory(cardIdStr, cat.id);
                 };
 
                 filterRow.appendChild(button);
@@ -588,15 +578,15 @@
             });
         }
 
-        async function moveCardToCategory(cardId, destCategoryId) {
-            try {
-                await db.collection("flashcards").doc(String(cardId)).update({ category: destCategoryId });
-            } catch(e) {
-                console.error("Cloud category save failed:", e);
+        function moveCardToCategory(cardId, destCategoryId) {
+            const targetCard = words.find(w => w.id === String(cardId));
+            if (targetCard) {
+                targetCard.category = destCategoryId;
+                renderCards();
             }
         }
 
-        async function addNewCategory() {
+        function addNewCategory() {
             if (isKidsMode) return;
             const iconInput = document.getElementById('cat-icon').value.trim();
             const nameInput = document.getElementById('cat-name').value.trim();
@@ -604,31 +594,32 @@
             if(!iconInput || !nameInput) return alert("Fill out all fields!");
             const cleanId = nameInput.toLowerCase().replace(/[^a-z0-9]/g, '-');
 
-            try {
-                await db.collection("categories").doc(cleanId).set({ id: cleanId, name: nameInput, icon: iconInput });
-                document.getElementById('cat-icon').value = ''; 
-                document.getElementById('cat-name').value = '';
-            } catch(e) {
-                alert("Error saving category to cloud!");
-            }
+            categories.push({ id: cleanId, name: nameInput, icon: iconInput });
+            
+            document.getElementById('cat-icon').value = ''; 
+            document.getElementById('cat-name').value = '';
+            
+            renderCategoryFilters();
+            populateCategorySelectDropdowns();
         }
 
         function toggleApplicationMode() {
             const toggleBtn = document.getElementById('mode-toggle-btn');
             const creatorPanel = document.getElementById('creator-panel');
             const catPanel = document.getElementById('category-panel');
+            const expPanel = document.getElementById('export-panel');
 
             if (isKidsMode) {
                 if (prompt("Parents: Enter passcode:") !== "password") return alert("Wrong passcode!");
                 isKidsMode = false;
                 toggleBtn.innerText = "🔓 Parent Mode (Editing Open)";
                 toggleBtn.classList.remove('kids-active');
-                creatorPanel.style.display = "block"; catPanel.style.display = "block";
+                creatorPanel.style.display = "block"; catPanel.style.display = "block"; expPanel.style.display = "block";
             } else {
                 isKidsMode = true;
                 toggleBtn.innerText = "🔒 Kids Mode (Safe & Locked)";
                 toggleBtn.classList.add('kids-active');
-                creatorPanel.style.display = "none"; catPanel.style.display = "none";
+                creatorPanel.style.display = "none"; catPanel.style.display = "none"; expPanel.style.display = "none";
             }
             renderCards(); 
         }
@@ -675,30 +666,37 @@
             });
         }
 
-        function handleAutoTranslationInput() {
+        // --- 4. DUAL AUTO-TRANSLATION PIPELINE (HMONG & SPANISH) ---
+        function handleDualAutoTranslation() {
             const typedText = document.getElementById('add-en').value.trim();
-            const lowerText = typedText.toLowerCase();
-
-            document.getElementById('add-hmo').value = hmongBackupDictionary[lowerText] ? hmongBackupDictionary[lowerText] : "";
             clearTimeout(translationDebounceTimer);
 
             if (!typedText) {
                 document.getElementById('add-es').value = "";
+                document.getElementById('add-hmo').value = "";
                 return;
             }
 
             translationDebounceTimer = setTimeout(async () => {
+                // Auto-Translate Spanish
                 try {
-                    const response = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=es&dt=t&q=${encodeURIComponent(typedText)}`);
-                    const data = await response.json();
-                    if (data && data[0] && data[0][0] && data[0][0][0]) {
-                        let translatedWord = data[0][0][0].trim();
-                        translatedWord = translatedWord.charAt(0).toUpperCase() + translatedWord.slice(1);
-                        document.getElementById('add-es').value = translatedWord;
+                    const resEs = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=es&dt=t&q=${encodeURIComponent(typedText)}`);
+                    const dataEs = await resEs.json();
+                    if (dataEs && dataEs[0] && dataEs[0][0] && dataEs[0][0][0]) {
+                        let wordEs = dataEs[0][0][0].trim();
+                        document.getElementById('add-es').value = wordEs.charAt(0).toUpperCase() + wordEs.slice(1);
                     }
-                } catch (error) {
-                    document.getElementById('add-es').value = "";
-                }
+                } catch (e) { console.error("Spanish translation error", e); }
+
+                // Auto-Translate Hmong
+                try {
+                    const resHmo = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=hmn&dt=t&q=${encodeURIComponent(typedText)}`);
+                    const dataHmo = await resHmo.json();
+                    if (dataHmo && dataHmo[0] && dataHmo[0][0] && dataHmo[0][0][0]) {
+                        let wordHmo = dataHmo[0][0][0].trim();
+                        document.getElementById('add-hmo').value = wordHmo.charAt(0).toUpperCase() + wordHmo.slice(1);
+                    }
+                } catch (e) { console.error("Hmong translation error", e); }
             }, 500);
         }
 
@@ -716,49 +714,42 @@
             if (mediaInput.files && mediaInput.files[0]) {
                 const file = mediaInput.files[0];
                 const reader = new FileReader();
-                reader.onload = async (e) => await uploadWordToCloud(newId, categoryVal, enVal, hmoVal, esVal, e.target.result, file.type.includes('video') ? 'video' : 'image');
+                reader.onload = (e) => finalizeNewWord(newId, categoryVal, enVal, hmoVal, esVal, e.target.result, file.type.includes('video') ? 'video' : 'image');
                 reader.readAsDataURL(file);
             } else {
                 let mediaUrl = `https://images.unsplash.com/photo-1546182990-dffeafbe841d?w=400`;
-                uploadWordToCloud(newId, categoryVal, enVal, hmoVal, esVal, mediaUrl, 'image');
+                finalizeNewWord(newId, categoryVal, enVal, hmoVal, esVal, mediaUrl, 'image');
             }
         }
 
-        async function uploadWordToCloud(id, catId, en, hmo, es, media, type) {
-            try {
-                await db.collection("flashcards").doc(id).set({ id, category: catId, en, hmo, es, media, mediaType: type, audioDataUrl: null });
-                document.getElementById('add-en').value = ''; 
-                document.getElementById('add-hmo').value = ''; 
-                document.getElementById('add-es').value = ''; 
-                document.getElementById('add-media').value = '';
-            } catch(e) {
-                alert("Cloud save failed! Please check your internet connection.");
-            }
+        function finalizeNewWord(id, catId, en, hmo, es, media, type) {
+            words.push({ id, category: catId, en, hmo, es, media, mediaType: type, audioDataUrl: null });
+            renderCards();
+
+            document.getElementById('add-en').value = ''; 
+            document.getElementById('add-hmo').value = ''; 
+            document.getElementById('add-es').value = ''; 
+            document.getElementById('add-media').value = '';
         }
 
-        // --- HIGH-QUALITY NEURAL TEXT-TO-SPEECH CONTROLLER ---
+        // --- 5. FIXED NEURAL TEXT-TO-SPEECH (TTS) SYSTEM ---
         function speakTTS(text, lang) {
             window.speechSynthesis.cancel();
-            
             if (activeCloudAudioStream) {
                 activeCloudAudioStream.pause();
                 activeCloudAudioStream = null;
             }
 
-            let neuralSpeechUrl = '';
-            let fallbackLocale = '';
+            let fallbackLocale = lang === 'es' ? 'es-MX' : 'en-US';
+            
+            // Fixed neural audio endpoints with desktop/mobile client identifier headers spoofed via query parameter
+            let cloudSpeechUrl = lang === 'es' 
+                ? `https://translate.google.com/translate_tts?ie=UTF-8&tl=es-MX&client=tw-ob&ttsspeed=1&q=${encodeURIComponent(text)}`
+                : `https://translate.google.com/translate_tts?ie=UTF-8&tl=en-US&client=tw-ob&ttsspeed=1&q=${encodeURIComponent(text)}`;
 
-            if (lang === 'es') {
-                neuralSpeechUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=es-MX&client=tw-ob&q=${encodeURIComponent(text)}`;
-                fallbackLocale = 'es-MX';
-            } else {
-                neuralSpeechUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=en-US&client=tw-ob&q=${encodeURIComponent(text)}`;
-                fallbackLocale = 'en-US';
-            }
-
-            activeCloudAudioStream = new Audio(neuralSpeechUrl);
+            activeCloudAudioStream = new Audio(cloudSpeechUrl);
             activeCloudAudioStream.play().catch((err) => {
-                console.log("Cloud audio pipeline blocked. Engaging native device fallbacks.", err);
+                // If cloud engine fails, instantly use native onboard device speech fallback channel
                 executeNativeTTSFallback(text, fallbackLocale);
             });
         }
@@ -770,25 +761,13 @@
 
             if (window.speechSynthesis.getVoices) {
                 const systemVoices = window.speechSynthesis.getVoices();
-                
-                if (fallbackLocale.startsWith('es')) {
-                    let optimalVoice = systemVoices.find(v => v.lang.startsWith('es') && (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Premium')));
-                    if (!optimalVoice) optimalVoice = systemVoices.find(v => v.lang.includes('MX') || v.lang.includes('US'));
-                    if (!optimalVoice) optimalVoice = systemVoices.find(v => v.lang.startsWith('es'));
-                    if (optimalVoice) utterance.voice = optimalVoice;
-                } else {
-                    let engVoice = systemVoices.find(v => v.lang.includes('US') && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Premium')));
-                    if (!engVoice) engVoice = systemVoices.find(v => v.lang.startsWith('en'));
-                    if (engVoice) utterance.voice = engVoice;
-                }
+                let optimalVoice = systemVoices.find(v => v.lang.toLowerCase().startsWith(fallbackLocale.substring(0,2)));
+                if (optimalVoice) utterance.voice = optimalVoice;
             }
             window.speechSynthesis.speak(utterance);
         }
 
-        if (typeof speechSynthesis !== 'undefined' && speechSynthesis.onvoiceschanged !== undefined) {
-            speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
-        }
-
+        // --- 6. MANAGEMENT HANDLERS ---
         function openAudioModal(id) {
             currentActiveId = id;
             const wordObj = words.find(w => w.id === id);
@@ -818,11 +797,11 @@
                     const blob = new Blob(activeAudioChunks, { type: 'audio/wav' });
                     const reader = new FileReader();
                     reader.readAsDataURL(blob);
-                    reader.onloadend = async () => {
-                        try {
-                            await db.collection("flashcards").doc(id).update({ audioDataUrl: reader.result });
-                        } catch(err) {
-                            alert("Audio failed to save to cloud storage.");
+                    reader.onloadend = () => {
+                        const targetCard = words.find(w => w.id === id);
+                        if(targetCard) {
+                            targetCard.audioDataUrl = reader.result;
+                            renderCards();
                         }
                     };
                     stream.getTracks().forEach(t => t.stop());
@@ -852,22 +831,20 @@
             document.getElementById('edit-text-modal').classList.add('active');
         }
 
-        async function saveTextEdits() {
-            try {
-                await db.collection("flashcards").doc(currentActiveId).update({
-                    en: document.getElementById('edit-modal-en').value.trim(),
-                    hmo: document.getElementById('edit-modal-hmo').value.trim(),
-                    es: document.getElementById('edit-modal-es').value.trim()
-                });
+        function saveTextEdits() {
+            const targetCard = words.find(w => w.id === currentActiveId);
+            if(targetCard) {
+                targetCard.en = document.getElementById('edit-modal-en').value.trim();
+                targetCard.hmo = document.getElementById('edit-modal-hmo').value.trim();
+                targetCard.es = document.getElementById('edit-modal-es').value.trim();
+                renderCards();
                 closeTextModal();
-            } catch(e) {
-                alert("Could not sync text updates with Firestore.");
             }
         }
 
         function closeTextModal() { document.getElementById('edit-text-modal').classList.remove('active'); }
         function openMoveModal(id) { currentActiveId = id; document.getElementById('move-category-modal').classList.add('active'); }
-        async function saveCategoryMove() { await moveCardToCategory(currentActiveId, document.getElementById('move-modal-select').value); closeMoveModal(); }
+        function saveCategoryMove() { moveCardToCategory(currentActiveId, document.getElementById('move-modal-select').value); closeMoveModal(); }
         function closeMoveModal() { document.getElementById('move-category-modal').classList.remove('active'); }
         function triggerEditMedia(id) { document.getElementById(`edit-file-${id}`).click(); }
         
@@ -875,21 +852,20 @@
             const file = event.target.files[0];
             if (file) {
                 const reader = new FileReader();
-                reader.onload = async (e) => {
-                    try {
-                        await db.collection("flashcards").doc(id).update({ 
-                            media: e.target.result, 
-                            mediaType: file.type.includes('video') ? 'video' : 'image' 
-                        });
-                    } catch(err) {
-                        alert("Media could not be committed to cloud firestore.");
+                reader.onload = (e) => {
+                    const targetCard = words.find(w => w.id === id);
+                    if(targetCard) {
+                        targetCard.media = e.target.result;
+                        targetCard.mediaType = file.type.includes('video') ? 'video' : 'image';
+                        renderCards();
                     }
                 };
                 reader.readAsDataURL(file);
             }
         }
 
-        startCloudSync();
+        // Initialize application build data
+        fetchMasterJsonData();
     </script>
 </body>
 </html>
