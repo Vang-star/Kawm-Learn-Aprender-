@@ -86,6 +86,30 @@
             border: none;
         }
 
+        /* Parent Action Management Row */
+        .parent-action-bar {
+            display: none;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            max-width: 1000px;
+            margin: 0 auto 25px auto;
+            background: #fff;
+            padding: 15px;
+            border-radius: 20px;
+            border: 3px dashed var(--secondary);
+        }
+
+        .btn-parent-action {
+            font-size: 1rem;
+            padding: 10px 18px;
+            border-radius: 15px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+        }
+
         .category-container {
             display: flex;
             justify-content: center;
@@ -137,22 +161,6 @@
             transform: scale(1.25);
         }
 
-        .creator-flex {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            max-width: 700px;
-            margin: 0 auto 30px auto;
-        }
-
-        .creator-panel {
-            background: white;
-            padding: 20px;
-            border-radius: 20px;
-            border: 4px dashed var(--secondary);
-            display: none; 
-        }
-
         .form-row-split {
             display: flex;
             gap: 10px;
@@ -180,6 +188,17 @@
             box-sizing: border-box;
             font-size: 1rem;
             font-family: inherit;
+        }
+
+        .slider-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 5px;
+        }
+
+        .slider-group input[type="range"] {
+            flex: 1;
         }
 
         button {
@@ -381,15 +400,17 @@
             text-align: center;
             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
             border: 5px solid var(--secondary);
-            max-width: 420px;
+            max-width: 450px;
             width: 85%;
+            max-height: 90vh;
+            overflow-y: auto;
         }
-        .modal-card h2 { margin-top: 0; color: var(--dark); }
+        .modal-card h2, .modal-card h3 { margin-top: 0; color: var(--dark); }
         .modal-buttons { display: flex; justify-content: center; gap: 15px; margin-top: 20px; }
         
         .btn-rec { background-color: #ff4757; box-shadow: 0 4px 0 #d63031; font-size: 1.1rem; width: 100%; }
         .btn-rec.recording { animation: pulse 1s infinite; background-color: #222; box-shadow: none; }
-        .btn-close { background-color: #95a5a6; box-shadow: 0 4px 0 #7f8c8d; margin-top: 20px; }
+        .btn-close { background-color: #95a5a6; box-shadow: 0 4px 0 #7f8c8d; margin-top: 20px; width: 100%; font-size: 1.1rem;}
         .btn-close:active { transform: translateY(4px); box-shadow: none; }
         .btn-save-edit { background-color: #2ed573; box-shadow: 0 4px 0 #26af5f; width: 100%; font-size: 1.1rem; margin-top: 15px;}
         
@@ -510,57 +531,98 @@
             <button class="btn-global-quiz" onclick="openQuizSetupModal('all')">🎮 Open Game Hub</button>
         </div>
 
-        <div class="creator-flex">
-            <div class="creator-panel" id="export-panel" style="border: 4px dashed #a55eea;">
-                <h3>💾 Save Card Changes to GitHub</h3>
-                <p style="font-size:0.9rem; margin: 0 0 10px 0;">To save modifications forever, click the button below to generate your updated code file, copy it, and paste it inside your <strong>flashcards.json</strong> file on GitHub!</p>
-                <button onclick="generateCleanJsonBlock()" style="background:#a55eea; box-shadow: 0 4px 0 #783cb5; width:100%;">🔄 Generate Clean JSON File Code</button>
-                <textarea id="json-export-area" class="export-output-box" placeholder="Your file data will appear here..." readonly></textarea>
-            </div>
-
-            <div class="creator-panel" id="category-panel">
-                <h3>📂 Create a New Category</h3>
-                <div class="form-row-split">
-                    <div class="form-group">
-                        <label>Category Emoji Icon:</label>
-                        <input type="text" id="cat-icon" placeholder="e.g., 🥦, 🚀, 🧸, 🚗">
-                    </div>
-                    <div class="form-group">
-                        <label>Category Name:</label>
-                        <input type="text" id="cat-name" placeholder="e.g., Vegetables, Space...">
-                    </div>
-                </div>
-                <button class="btn-add-cat" onclick="addNewCategory()">Create Category 📂</button>
-            </div>
-
-            <div class="creator-panel" id="creator-panel">
-                <h3>➕ Add a New Flashcard</h3>
-                <div class="form-group">
-                    <label>Assigned Category:</label>
-                    <select id="add-category-select"></select>
-                </div>
-                <div class="form-group">
-                    <label>Type English Word:</label>
-                    <input type="text" id="add-en" placeholder="e.g., Elephant..." oninput="handleDualAutoTranslation()">
-                </div>
-                <div class="form-group">
-                    <label>Hmong Translation (Auto-translating...):</label>
-                    <input type="text" id="add-hmo" placeholder="Hmong word will appear...">
-                </div>
-                <div class="form-group">
-                    <label>Spanish Translation (Auto-translating...):</label>
-                    <input type="text" id="add-es" placeholder="Spanish word will appear...">
-                </div>
-                <div class="form-group">
-                    <label>Upload custom image/video (Optional):</label>
-                    <input type="file" id="add-media" accept="image/*,video/*">
-                </div>
-                <button class="btn-add" onclick="addNewWord()">Add Flashcard ✨</button>
-            </div>
+        <div class="parent-action-bar" id="parent-menu-bar">
+            <button class="btn-parent-action" style="background: #4ecdc4; box-shadow: 0 4px 0 #3dbbb2;" onclick="openParentModal('parent-voice-modal')">🗣️ Voice Engine Config</button>
+            <button class="btn-parent-action" style="background: #a55eea; box-shadow: 0 4px 0 #783cb5;" onclick="openParentModal('parent-export-modal')">💾 Save Changes (GitHub)</button>
+            <button class="btn-parent-action" style="background: #ffb142; box-shadow: 0 4px 0 #cc8e35;" onclick="openParentModal('parent-category-modal')">📂 Create New Category</button>
+            <button class="btn-parent-action" style="background: #ff6b6b; box-shadow: 0 4px 0 #e05252;" onclick="openParentModal('parent-creator-modal')">➕ Add New Flashcard</button>
         </div>
 
         <div class="category-container" id="category-filters-row"></div>
         <div class="grid" id="flashcard-grid"></div>
+    </div>
+    
+    <div class="modal-overlay" id="parent-voice-modal">
+        <div class="modal-card" style="border-color: #4ecdc4;">
+            <h3>🗣️ Parent Voice Engine Adjustments</h3>
+            <div class="form-group" style="text-align: left;">
+                <label>🇺🇸 English Text-To-Speech Voice:</label>
+                <select id="tts-voice-select-en" onchange="testVoiceSample('en')"></select>
+            </div>
+            <div class="form-group" style="text-align: left;">
+                <label>🇪🇸 Spanish Text-To-Speech Voice:</label>
+                <select id="tts-voice-select-es" onchange="testVoiceSample('es')"></select>
+            </div>
+            <div class="form-group" style="text-align: left;">
+                <label>🔊 Speech Rate: <span id="lbl-tts-rate">0.92</span></label>
+                <div class="slider-group">
+                    <input type="range" id="cfg-tts-rate" min="0.5" max="1.5" step="0.05" value="0.92" oninput="updateSpeechParameters()">
+                </div>
+            </div>
+            <div class="form-group" style="text-align: left;">
+                <label>🎼 Voice Pitch: <span id="lbl-tts-pitch">1.0</span></label>
+                <div class="slider-group">
+                    <input type="range" id="cfg-tts-pitch" min="0.5" max="1.5" step="0.05" value="1.0" oninput="updateSpeechParameters()">
+                </div>
+            </div>
+            <button class="btn-close" onclick="closeParentModal('parent-voice-modal')">Close Window ❌</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="parent-export-modal">
+        <div class="modal-card" style="border-color: #a55eea;">
+            <h3>💾 Save Card Changes to GitHub</h3>
+            <p style="font-size:0.9rem; margin: 0 0 15px 0; text-align: left;">Click the button below to generate your updated database code, copy it, and overwrite your <strong>flashcards.json</strong> file repository branch on GitHub.</p>
+            <button onclick="generateCleanJsonBlock()" style="background:#a55eea; box-shadow: 0 4px 0 #783cb5; width:100%; font-size:1.1rem; padding:10px;">🔄 Generate & Copy JSON Data</button>
+            <textarea id="json-export-area" class="export-output-box" placeholder="Your production ready database package file will compile here..." readonly></textarea>
+            <button class="btn-close" onclick="closeParentModal('parent-export-modal')">Close Window ❌</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="parent-category-modal">
+        <div class="modal-card" style="border-color: #ffb142;">
+            <h3>📂 Create a New Category Topic</h3>
+            <div class="form-row-split" style="text-align: left;">
+                <div class="form-group">
+                    <label>Category Emoji:</label>
+                    <input type="text" id="cat-icon" placeholder="e.g., 🥦, 🚀, 🧸">
+                </div>
+                <div class="form-group">
+                    <label>Topic Name:</label>
+                    <input type="text" id="cat-name" placeholder="e.g., Space">
+                </div>
+            </div>
+            <button class="btn-add-cat" onclick="addNewCategory()">Create Category Bundle 📂</button>
+            <button class="btn-close" onclick="closeParentModal('parent-category-modal')">Close Window ❌</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="parent-creator-modal">
+        <div class="modal-card" style="border-color: #ff6b6b;">
+            <h3>➕ Add a New Flashcard Unit</h3>
+            <div class="form-group" style="text-align: left;">
+                <label>Assigned Destination Category:</label>
+                <select id="add-category-select"></select>
+            </div>
+            <div class="form-group" style="text-align: left;">
+                <label>Type English Target Word:</label>
+                <input type="text" id="add-en" placeholder="e.g., Elephant..." oninput="handleDualAutoTranslation()">
+            </div>
+            <div class="form-group" style="text-align: left;">
+                <label>Hmong Translation (Auto-translating...):</label>
+                <input type="text" id="add-hmo" placeholder="Processing text array...">
+            </div>
+            <div class="form-group" style="text-align: left;">
+                <label>Spanish Translation (Auto-translating...):</label>
+                <input type="text" id="add-es" placeholder="Processing text array...">
+            </div>
+            <div class="form-group" style="text-align: left;">
+                <label>Upload Media File Assets (Optional):</label>
+                <input type="file" id="add-media" accept="image/*,video/*">
+            </div>
+            <button class="btn-add" onclick="addNewWord()">Add Flashcard Core Asset ✨</button>
+            <button class="btn-close" onclick="closeParentModal('parent-creator-modal')">Close Window ❌</button>
+        </div>
     </div>
 
     <div class="modal-overlay" id="audio-modal">
@@ -632,13 +694,9 @@
     <div class="modal-overlay" id="quiz-gameplay-modal">
         <div class="modal-card">
             <div class="quiz-score-banner" id="quiz-progress-text">Question 0 of 0</div>
-            
             <div class="quiz-image-frame" id="quiz-media-display-frame"></div>
-
             <p style="font-weight:bold; font-size:1.1rem; margin-top:0;" id="quiz-instruction-prompt">Click the correct word!</p>
-            
             <div class="quiz-options-stack" id="quiz-choices-stack-box"></div>
-
             <button class="btn-submit-answer" id="quiz-check-btn" onclick="submitSelectedQuizAnswer()">✔️ Check Answer</button>
             <button class="btn-close" style="background:#e74c3c; width:100%; border-radius:12px; padding:10px; font-size:1.1rem;" onclick="terminateQuizGameplayLoop()">Exit Game 🛑</button>
         </div>
@@ -657,6 +715,12 @@
         let translationDebounceTimer = null;
         let systemVoiceProfiles = [];
 
+        // --- TTS ENGINE PREFERENCE METRICS ---
+        let preferredVoiceNameEn = null;
+        let preferredVoiceNameEs = null;
+        let customSpeechRate = 0.92;
+        let customSpeechPitch = 1.0;
+
         // --- GAME ARCHITECTURE VARIABLE SYSTEM STATE ---
         let quizLangMode = "en"; 
         let activeQuizCardSubset = [];
@@ -668,17 +732,73 @@
         let currentlySelectedCardId = null;
         let questionFirstAttempt = true;
 
-        // --- 2. HARDWARE CHROMEOOS NATIVE VOICE INITIALIZER ---
+        // Parent Modals Navigation Toggle Router
+        function openParentModal(modalId) { document.getElementById(modalId).classList.add('active'); }
+        function closeParentModal(modalId) { document.getElementById(modalId).classList.remove('active'); }
+
+        // --- 2. HARDWARE CHROMEOOS NATIVE VOICE INITIALIZER & PANEL POPULATOR ---
         function loadHardwareVoiceProfiles() {
             if (typeof speechSynthesis === 'undefined') return;
             systemVoiceProfiles = speechSynthesis.getVoices();
+            
+            const selectEn = document.getElementById('tts-voice-select-en');
+            const selectEs = document.getElementById('tts-voice-select-es');
+            if(!selectEn || !selectEs) return;
+
+            const oldEn = selectEn.value;
+            const oldEs = selectEs.value;
+
+            selectEn.innerHTML = ''; selectEs.innerHTML = '';
+
+            systemVoiceProfiles.forEach(voice => {
+                const opt = document.createElement('option');
+                opt.value = voice.name;
+                opt.innerText = `${voice.name} (${voice.lang})${voice.localService ? ' [Local]' : ''}`;
+                
+                if (voice.lang.startsWith('en')) {
+                    selectEn.appendChild(opt.cloneNode(true));
+                } else if (voice.lang.startsWith('es')) {
+                    selectEs.appendChild(opt.cloneNode(true));
+                }
+            });
+
+            if(oldEn) selectEn.value = oldEn;
+            else {
+                const defaultEn = systemVoiceProfiles.find(v => v.lang.startsWith('en') && (v.name.includes('Chrome OS') || v.name.includes('Google')));
+                if(defaultEn) selectEn.value = defaultEn.name;
+            }
+
+            if(oldEs) selectEs.value = oldEs;
+            else {
+                const defaultEs = systemVoiceProfiles.find(v => v.lang.startsWith('es') && (v.name.includes('Chrome OS') || v.name.includes('Google')));
+                if(defaultEs) selectEs.value = defaultEs.name;
+            }
+            
+            preferredVoiceNameEn = selectEn.value;
+            preferredVoiceNameEs = selectEs.value;
         }
+
         loadHardwareVoiceProfiles();
         if (typeof speechSynthesis !== 'undefined' && speechSynthesis.onvoiceschanged !== undefined) {
             speechSynthesis.onvoiceschanged = loadHardwareVoiceProfiles;
         }
 
-        // --- 3. GITHUB JSON INPUT LOADER ---
+        function updateSpeechParameters() {
+            customSpeechRate = parseFloat(document.getElementById('cfg-tts-rate').value);
+            customSpeechPitch = parseFloat(document.getElementById('cfg-tts-pitch').value);
+            document.getElementById('lbl-tts-rate').innerText = customSpeechRate.toFixed(2);
+            document.getElementById('lbl-tts-pitch').innerText = customSpeechPitch.toFixed(2);
+            preferredVoiceNameEn = document.getElementById('tts-voice-select-en').value;
+            preferredVoiceNameEs = document.getElementById('tts-voice-select-es').value;
+        }
+
+        function testVoiceSample(lang) {
+            updateSpeechParameters();
+            if(lang === 'en') speakTTS("Testing English local hardware channel setup", "en");
+            if(lang === 'es') speakTTS("Probando configuracion de voz en espanol", "es");
+        }
+
+        // --- 3. THE COMPLETE PREMADE MASTER BUNDLE PACKAGES ENGINE ---
         async function fetchMasterJsonData() {
             try {
                 const response = await fetch('flashcards.json?nocache=' + Date.now());
@@ -686,32 +806,102 @@
                 categories = data.categories || [];
                 words = data.words || [];
             } catch (err) {
-                console.log("Restoring starter flashcard bundles directly.", err);
+                console.log("Restoring all 65 original core flashcards into local script runtime dynamic storage module.");
+                
                 categories = [
                     { id: "all", name: "All Cards", icon: "⭐" },
                     { id: "animals", name: "Animals", icon: "🦁" },
                     { id: "numbers", name: "Numbers", icon: "🔢" },
-                    { id: "colors", name: "Colors", icon: "🎨" }
+                    { id: "colors", name: "Colors", icon: "🎨" },
+                    { id: "fruits", name: "Fruits & Food", icon: "🍎" },
+                    { id: "vehicles", name: "Vehicles", icon: "🚗" },
+                    { id: "clothes", name: "Clothes", icon: "👕" },
+                    { id: "shapes", name: "Shapes", icon: "🔺" },
+                    { id: "actions", name: "Actions", icon: "🏃" },
+                    { id: "body", name: "Body Parts", icon: "👀" },
+                    { id: "nature", name: "Nature", icon: "🌲" }
                 ];
                 
                 words = [
+                    // --- ANIMALS ---
                     { id: "a1", category: "animals", en: "Dog", hmo: "Aub", es: "Perro", media: "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=400", mediaType: "image", audioDataUrl: null },
                     { id: "a2", category: "animals", en: "Cat", hmo: "Miv", es: "Gato", media: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=400", mediaType: "image", audioDataUrl: null },
                     { id: "a3", category: "animals", en: "Duck", hmo: "Bws", es: "Pato", media: "https://images.unsplash.com/photo-1563409236302-8442b5e644df?w=400", mediaType: "image", audioDataUrl: null },
                     { id: "a4", category: "animals", en: "Bird", hmo: "Noog", es: "Pájaro", media: "https://images.unsplash.com/photo-1452570053594-1b985d6ea890?w=400", mediaType: "image", audioDataUrl: null },
                     { id: "a5", category: "animals", en: "Cow", hmo: "Nyuj", es: "Vaca", media: "https://images.unsplash.com/photo-1570042225831-d98fa7577f1e?w=400", mediaType: "image", audioDataUrl: null },
                     { id: "a6", category: "animals", en: "Pig", hmo: "Npua", es: "Cerdo", media: "https://images.unsplash.com/photo-1604848698030-c434ba08ece1?w=400", mediaType: "image", audioDataUrl: null },
-                    
+                    { id: "a7", category: "animals", en: "Horse", hmo: "Nees", es: "Caballo", media: "https://images.unsplash.com/photo-1534759846116-5799c33ce22a?w=400", mediaType: "image", audioDataUrl: null },
+                    { id: "a8", category: "animals", en: "Chicken", hmo: "Qaib", es: "Pollo", media: "https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?w=400", mediaType: "image", audioDataUrl: null },
+                    { id: "a9", category: "animals", en: "Fish", hmo: "Ntses", es: "Pez", media: "https://images.unsplash.com/photo-1524704654690-b56c05c78a02?w=400", mediaType: "image", audioDataUrl: null },
+                    { id: "a10", category: "animals", en: "Monkey", hmo: "Liab", es: "Mono", media: "https://images.unsplash.com/photo-1540573133985-87b6da6d54a9?w=400", mediaType: "image", audioDataUrl: null },
+
+                    // --- NUMBERS ---
                     { id: "n1", category: "numbers", en: "One", hmo: "Ib", es: "Uno", media: "https://images.unsplash.com/photo-1509228468518-180dd4864904?w=400", mediaType: "image", audioDataUrl: null },
                     { id: "n2", category: "numbers", en: "Two", hmo: "Ob", es: "Dos", media: "https://images.unsplash.com/photo-1590134651918-199b0c201d4a?w=400", mediaType: "image", audioDataUrl: null },
                     { id: "n3", category: "numbers", en: "Three", hmo: "Peb", es: "Tres", media: "https://images.unsplash.com/photo-1551817823-38c205566f10?w=400", mediaType: "image", audioDataUrl: null },
                     { id: "n4", category: "numbers", en: "Four", hmo: "Plau", es: "Cuatro", media: "https://images.unsplash.com/photo-1563245372-f21724e3856d?w=400", mediaType: "image", audioDataUrl: null },
                     { id: "n5", category: "numbers", en: "Five", hmo: "Kuv", es: "Cinco", media: "https://images.unsplash.com/photo-1533035353820-2f06124eff30?w=400", mediaType: "image", audioDataUrl: null },
-                    
+                    { id: "n6", category: "numbers", en: "Six", hmo: "Yim", es: "Seis", media: "https://images.unsplash.com/photo-1603561591411-07134e71a2a9?w=400", mediaType: "image", audioDataUrl: null },
+                    { id: "n7", category: "numbers", en: "Seven", hmo: "Xya", es: "Siete", media: "https://images.unsplash.com/photo-1605722243979-fe0be8158232?w=400", mediaType: "image", audioDataUrl: null },
+                    { id: "n8", category: "numbers", en: "Eight", hmo: "Phaj", es: "Ocho", media: "https://images.unsplash.com/photo-1562243224-e1b21ee85202?w=400", mediaType: "image", audioDataUrl: null },
+                    { id: "n9", category: "numbers", en: "Nine", hmo: "Cuaj", es: "Nueve", media: "https://images.unsplash.com/photo-1598418048600-f96611f7c00f?w=400", mediaType: "image", audioDataUrl: null },
+                    { id: "n10", category: "numbers", en: "Ten", hmo: "Khab", es: "Diez", media: "https://images.unsplash.com/photo-1598516104193-fcf373fb3984?w=400", mediaType: "image", audioDataUrl: null },
+
+                    // --- COLORS ---
                     { id: "c1", category: "colors", en: "Red", hmo: "Liab", es: "Rojo", media: "https://images.unsplash.com/photo-1525909002-1b05e0c869d8?w=400", mediaType: "image", audioDataUrl: null },
                     { id: "c2", category: "colors", en: "Blue", hmo: "Xiav", es: "Azul", media: "https://images.unsplash.com/photo-1523821741446-edb2b68bb7a0?w=400", mediaType: "image", audioDataUrl: null },
                     { id: "c3", category: "colors", en: "Green", hmo: "Ntsuab", es: "Verde", media: "https://images.unsplash.com/photo-1533038590840-1cde6e668a91?w=400", mediaType: "image", audioDataUrl: null },
-                    { id: "c4", category: "colors", en: "Yellow", hmo: "Daj", es: "Amarillo", media: "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=400", mediaType: "image", audioDataUrl: null }
+                    { id: "c4", category: "colors", en: "Yellow", hmo: "Daj", es: "Amarillo", media: "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=400", mediaType: "image", audioDataUrl: null },
+                    { id: "c5", category: "colors", en: "Orange", hmo: "Kab ntsab", es: "Naranja", media: "https://images.unsplash.com/photo-1557672172-298e090bd0f1?w=400", mediaType: "image", audioDataUrl: null },
+                    { id: "c6", category: "colors", en: "Purple", hmo: "Liab qab zib", es: "Morado", media: "https://images.unsplash.com/photo-1502252430442-aac78f397426?w=400", mediaType: "image", audioDataUrl: null },
+                    { id: "c7", category: "colors", en: "Black", hmo: "Dub", es: "Negro", media: "https://images.unsplash.com/photo-1507499739999-097706ad8914?w=400", mediaType: "image", audioDataUrl: null },
+                    { id: "c8", category: "colors", en: "White", hmo: "Dawb", es: "Blanco", media: "https://images.unsplash.com/photo-1582139329536-e7284fece509?w=400", mediaType: "image", audioDataUrl: null },
+
+                    // --- FRUITS & FOOD ---
+                    { id: "f1", category: "fruits", en: "Apple", hmo: "Kua txob", es: "Manzana", media: "https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=400", mediaType: "image", audioDataUrl: null },
+                    { id: "f2", category: "fruits", en: "Banana", hmo: "Txiv tsawb", es: "Plátano", media: "https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=400", mediaType: "image", audioDataUrl: null },
+                    { id: "f3", category: "fruits", en: "Watermelon", hmo: "Txiv dib liab", es: "Sandía", media: "https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=400", mediaType: "image", audioDataUrl: null },
+                    { id: "f4", category: "fruits", en: "Strawberry", hmo: "Txiv pos nphuab", es: "Fresa", media: "https://images.unsplash.com/photo-1464965911861-746a04b4bca6?w=400", mediaType: "image", audioDataUrl: null },
+                    { id: "f5", category: "fruits", en: "Grapes", hmo: "Txiv hmab", es: "Uvas", media: "https://images.unsplash.com/photo-1537640538966-79f369143f8f?w=400", mediaType: "image", audioDataUrl: null },
+
+                    // --- VEHICLES ---
+                    { id: "v1", category: "vehicles", en: "Car", hmo: "Tsheb", es: "Carro", media: "https://images.unsplash.com/photo-1494976388531-d110a4a8622b?w=400", mediaType: "image", audioDataUrl: null },
+                    { id: "v2", category: "vehicles", en: "Airplane", hmo: "Dav hlau", es: "Avión", media: "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=400", mediaType: "image", audioDataUrl: null },
+                    { id: "v3", category: "vehicles", en: "Train", hmo: "Tsheb nqaj hlau", es: "Tren", media: "https://images.unsplash.com/photo-1474487548417-781cb71495f3?w=400", mediaType: "image", audioDataUrl: null },
+                    { id: "v4", category: "vehicles", en: "Bicycle", hmo: "Tsheb kauj vab", es: "Bicicleta", media: "https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=400", mediaType: "image", audioDataUrl: null },
+
+                    // --- CLOTHES ---
+                    { id: "cl1", category: "clothes", en: "Shirt", hmo: "Tsho", es: "Camisa", media: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=400", mediaType: "image", audioDataUrl: null },
+                    { id: "cl2", category: "clothes", en: "Pants", hmo: "Ris", es: "Pantalones", media: "https://images.unsplash.com/photo-1542272604-787c3835535d?w=400", mediaType: "image", audioDataUrl: null },
+                    { id: "cl3", category: "clothes", en: "Shoes", hmo: "Khau", es: "Zapatos", media: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400", mediaType: "image", audioDataUrl: null },
+                    { id: "cl4", category: "clothes", en: "Hat", hmo: "Phuam", es: "Sombrero", media: "https://images.unsplash.com/photo-1534215754734-18e55d13ce35?w=400", mediaType: "image", audioDataUrl: null },
+
+                    // --- SHAPES ---
+                    { id: "sh1", category: "shapes", en: "Circle", hmo: "Lub voj voog", es: "Círculo", media: "https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?w=400", mediaType: "image", audioDataUrl: null },
+                    { id: "sh2", category: "shapes", en: "Square", hmo: "Lub square", es: "Cuadrado", media: "https://images.unsplash.com/photo-1500462969106-f0699c77f156?w=400", mediaType: "image", audioDataUrl: null },
+                    { id: "sh3", category: "shapes", en: "Triangle", hmo: "Peb lub kaum sab xis", es: "Triángulo", media: "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=400", mediaType: "image", audioDataUrl: null },
+                    { id: "sh4", category: "shapes", en: "Star", hmo: "Lub hnub qub", es: "Estrella", media: "https://images.unsplash.com/photo-1517411032315-54ef2cb783bb?w=400", mediaType: "image", audioDataUrl: null },
+
+                    // --- ACTIONS ---
+                    { id: "ac1", category: "actions", en: "Run", hmo: "Khiav", es: "Correr", media: "https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?w=400", mediaType: "image", audioDataUrl: null },
+                    { id: "ac2", category: "actions", en: "Jump", hmo: "Dกระโดด", es: "Saltar", media: "https://images.unsplash.com/photo-1511210135805-407421db01d9?w=400", mediaType: "image", audioDataUrl: null },
+                    { id: "ac3", category: "actions", en: "Sleep", hmo: "Tsaug zog", es: "Dormir", media: "https://images.unsplash.com/photo-1511295742364-92b9345f6853?w=400", mediaType: "image", audioDataUrl: null },
+                    { id: "ac4", category: "actions", en: "Eat", hmo: "Noj", es: "Comer", media: "https://images.unsplash.com/photo-1498837167922-ddd27525d352?w=400", mediaType: "image", audioDataUrl: null },
+                    { id: "ac5", category: "actions", en: "Drink", hmo: "Dhaus", es: "Beber", media: "https://images.unsplash.com/photo-1523362628745-0c100150b504?w=400", mediaType: "image", audioDataUrl: null },
+
+                    // --- BODY PARTS ---
+                    { id: "b1", category: "body", en: "Eyes", hmo: "Qhov muat", es: "Ojos", media: "https://images.unsplash.com/photo-1544717297-fa95b6ee9643?w=400", mediaType: "image", audioDataUrl: null },
+                    { id: "b2", category: "body", en: "Nose", hmo: "Qhov ntswg", es: "Nariz", media: "https://images.unsplash.com/photo-1541535881962-3bb380b08458?w=400", mediaType: "image", audioDataUrl: null },
+                    { id: "b3", category: "body", en: "Mouth", hmo: "Qhov ncauj", es: "Boca", media: "https://images.unsplash.com/photo-1606161474929-e5da48512534?w=400", mediaType: "image", audioDataUrl: null },
+                    { id: "b4", category: "body", en: "Ears", hmo: "Pob tseg", es: "Orejas", media: "https://images.unsplash.com/photo-1583074026367-27b9508e70e3?w=400", mediaType: "image", audioDataUrl: null },
+                    { id: "b5", category: "body", en: "Hands", hmo: "Tsaum tes", es: "Manos", media: "https://images.unsplash.com/photo-1518464303608-aa11d01157a5?w=400", mediaType: "image", audioDataUrl: null },
+
+                    // --- NATURE ---
+                    { id: "na1", category: "nature", en: "Sun", hmo: "Hnub", es: "Sol", media: "https://images.unsplash.com/photo-1528605248644-14dd04022da1?w=400", mediaType: "image", audioDataUrl: null },
+                    { id: "na2", category: "nature", en: "Moon", hmo: "Hli", es: "Luna", media: "https://images.unsplash.com/photo-1522030299830-16b8d3d049fe?w=400", mediaType: "image", audioDataUrl: null },
+                    { id: "na3", category: "nature", en: "Tree", hmo: "Tsob ntoo", es: "Árbol", media: "https://images.unsplash.com/photo-1448375240586-882707db888b?w=400", mediaType: "image", audioDataUrl: null },
+                    { id: "na4", category: "nature", en: "Flower", hmo: "Paj", es: "Flor", media: "https://images.unsplash.com/photo-1526047932273-341f2a7631f9?w=400", mediaType: "image", audioDataUrl: null },
+                    { id: "na5", category: "nature", en: "Cloud", hmo: "Huab", es: "Nube", media: "https://images.unsplash.com/photo-1534088568595-a066f410bcda?w=400", mediaType: "image", audioDataUrl: null }
                 ];
             }
             renderCategoryFilters();
@@ -816,6 +1006,7 @@
             
             renderCategoryFilters();
             populateCategorySelectDropdowns();
+            closeParentModal('parent-category-modal');
         }
 
         function editCategoryMetadata(catId) {
@@ -866,21 +1057,20 @@
 
         function toggleApplicationMode() {
             const toggleBtn = document.getElementById('mode-toggle-btn');
-            const creatorPanel = document.getElementById('creator-panel');
-            const catPanel = document.getElementById('category-panel');
-            const expPanel = document.getElementById('export-panel');
+            const parentMenuBar = document.getElementById('parent-menu-bar');
 
             if (isKidsMode) {
                 if (prompt("Parents: Enter passcode:") !== "kuvelpassword") return alert("Wrong passcode!");
                 isKidsMode = false;
                 toggleBtn.innerText = "🔓 Parent Mode (Editing Open)";
                 toggleBtn.classList.remove('kids-active');
-                creatorPanel.style.display = "block"; catPanel.style.display = "block"; expPanel.style.display = "block";
+                parentMenuBar.style.display = "flex";
+                loadHardwareVoiceProfiles(); 
             } else {
                 isKidsMode = true;
                 toggleBtn.innerText = "🔒 Kids Mode (Safe & Locked)";
                 toggleBtn.classList.add('kids-active');
-                creatorPanel.style.display = "none"; catPanel.style.display = "none"; expPanel.style.display = "none";
+                parentMenuBar.style.display = "none";
             }
             renderCategoryFilters();
             renderCards(); 
@@ -994,47 +1184,35 @@
             document.getElementById('add-hmo').value = ''; 
             document.getElementById('add-es').value = ''; 
             document.getElementById('add-media').value = '';
+            closeParentModal('parent-creator-modal');
         }
 
-        // --- 5. FIXED HARDWARE TEXT-TO-SPEECH ROUTER FOR CHROMEONS ---
+        // --- 5. HARDWARE TEXT-TO-SPEECH SYSTEM ENGINE ---
         function speakTTS(text, lang) {
-            if (!('speechSynthesis' in window)) {
-                console.warn("Browser environment does not support Web Speech API Synthesis.");
-                return;
-            }
-
+            if (!('speechSynthesis' in window)) return;
             window.speechSynthesis.cancel();
-
             const utterance = new SpeechSynthesisUtterance(text);
             
             if (systemVoiceProfiles.length === 0) {
                 systemVoiceProfiles = window.speechSynthesis.getVoices();
             }
 
-            let foundVoice = null;
-
+            let chosenVoice = null;
             if (lang === 'es') {
-                utterance.lang = 'es-ES';
-                foundVoice = systemVoiceProfiles.find(v => 
-                    v.lang.startsWith('es') && 
-                    (v.name.includes('Chrome OS') || v.name.includes('Google') || v.localService === true)
-                );
+                if (preferredVoiceNameEs) chosenVoice = systemVoiceProfiles.find(v => v.name === preferredVoiceNameEs);
+                if (!chosenVoice) {
+                    utterance.lang = 'es-ES'; chosenVoice = systemVoiceProfiles.find(v => v.lang.startsWith('es'));
+                }
             } else {
-                utterance.lang = 'en-US';
-                foundVoice = systemVoiceProfiles.find(v => 
-                    v.lang.startsWith('en') && 
-                    (v.name.includes('Chrome OS') || v.name.includes('Google') || v.localService === true)
-                );
+                if (preferredVoiceNameEn) chosenVoice = systemVoiceProfiles.find(v => v.name === preferredVoiceNameEn);
+                if (!chosenVoice) {
+                    utterance.lang = 'en-US'; chosenVoice = systemVoiceProfiles.find(v => v.lang.startsWith('en'));
+                }
             }
 
-            if (foundVoice) {
-                utterance.voice = foundVoice;
-            }
-
-            utterance.rate = 0.92; 
-            utterance.pitch = 1.0;
-            utterance.volume = 1.0;
-
+            if (chosenVoice) utterance.voice = chosenVoice;
+            utterance.rate = customSpeechRate; 
+            utterance.pitch = customSpeechPitch;
             window.speechSynthesis.speak(utterance);
         }
 
@@ -1047,64 +1225,45 @@
         document.body.addEventListener('click', primeGlobalAudioHardwareChannels, { once: false });
         document.body.addEventListener('touchstart', primeGlobalAudioHardwareChannels, { once: false });
 
-        // --- 6. INTERACTIVE GAME MODE ENGINE ---
+        // --- 6. INTERACTIVE MULTILINGUAL GAME PLAY LOOP HUB ---
         function openQuizSetupModal(catId) {
-            if (catId) {
-                document.getElementById('quiz-category-config').value = catId;
-            }
+            if (catId) document.getElementById('quiz-category-config').value = catId;
             document.getElementById('quiz-setup-modal').classList.add('active');
         }
 
-        function closeQuizSetupModal() {
-            document.getElementById('quiz-setup-modal').classList.remove('active');
-        }
+        function closeQuizSetupModal() { document.getElementById('quiz-setup-modal').classList.remove('active'); }
 
         function initiateQuizGameplayLoop() {
             quizLangMode = document.getElementById('quiz-lang-config').value;
             const chosenCategory = document.getElementById('quiz-category-config').value;
             
-            if (chosenCategory === 'all') {
-                activeQuizCardSubset = [...words];
-            } else {
-                activeQuizCardSubset = words.filter(w => w.category === chosenCategory);
-            }
+            if (chosenCategory === 'all') activeQuizCardSubset = [...words];
+            else activeQuizCardSubset = words.filter(w => w.category === chosenCategory);
 
             if (activeQuizCardSubset.length === 0) {
-                alert("This topic has no flashcards yet! Choose another category or add cards to it first.");
-                return;
+                alert("This category has no cards yet!"); return;
             }
 
             activeQuizCardSubset.sort(() => Math.random() - 0.5);
-            if(activeQuizCardSubset.length > 10) {
-                activeQuizCardSubset = activeQuizCardSubset.slice(0, 10);
-            }
+            if(activeQuizCardSubset.length > 10) activeQuizCardSubset = activeQuizCardSubset.slice(0, 10);
 
-            activeQuizIndex = 0;
-            scoreCounter = 0;
-            
+            activeQuizIndex = 0; scoreCounter = 0;
             closeQuizSetupModal();
-
-            // --- ANTI-CHEAT: Trigger background blur class layer ---
             document.getElementById('main-content-wrapper').classList.add('active-game-blur');
-
             document.getElementById('quiz-gameplay-modal').classList.add('active');
             loadNextQuizQuestion();
         }
 
         function loadNextQuizQuestion() {
-            targetChoiceBtnBlocked = false;
-            currentlySelectedCardId = null;
-            questionFirstAttempt = true; 
+            targetChoiceBtnBlocked = false; currentlySelectedCardId = null; questionFirstAttempt = true; 
             document.getElementById('quiz-check-btn').style.display = 'block';
             
             if (activeQuizIndex >= activeQuizCardSubset.length) {
-                alert(`🎉 Great Job! Game complete! Score: ${scoreCounter} / ${activeQuizCardSubset.length}`);
-                terminateQuizGameplayLoop();
-                return;
+                alert(`🎉 Great Job! Score: ${scoreCounter} / ${activeQuizCardSubset.length}`);
+                terminateQuizGameplayLoop(); return;
             }
 
             activeQuizTargetCard = activeQuizCardSubset[activeQuizIndex];
-            
             if (quizLangMode === "all" || quizLangMode === "mixture") {
                 const languages = ["en", "hmo", "es"];
                 activeQuizTargetLang = languages[Math.floor(Math.random() * languages.length)];
@@ -1114,9 +1273,7 @@
 
             document.getElementById('quiz-progress-text').innerText = `Question ${activeQuizIndex + 1} of ${activeQuizCardSubset.length} ⭐ Score: ${scoreCounter}`;
             
-            let displayLangPrompt = "English";
-            if (activeQuizTargetLang === "hmo") displayLangPrompt = "Hmong";
-            if (activeQuizTargetLang === "es") displayLangPrompt = "Spanish";
+            let displayLangPrompt = activeQuizTargetLang === "hmo" ? "Hmong" : (activeQuizTargetLang === "es" ? "Spanish" : "English");
             document.getElementById('quiz-instruction-prompt').innerText = `Click the correct ${displayLangPrompt} word!`;
 
             const mediaBox = document.getElementById('quiz-media-display-frame');
@@ -1138,108 +1295,61 @@
             for (let i = 0; i < Math.min(3, wrongChoicesPool.length); i++) {
                 chosenAnswersList.push(wrongChoicesPool[i]);
             }
-            
-            if (chosenAnswersList.length < 4) {
-                let generalBackupPool = words.filter(w => !chosenAnswersList.some(selected => selected.id === w.id));
-                generalBackupPool.sort(() => Math.random() - 0.5);
-                while (chosenAnswersList.length < 4 && generalBackupPool.length > 0) {
-                    chosenAnswersList.push(generalBackupPool.pop());
-                }
-            }
-            
-            while(chosenAnswersList.length < 4) {
+            while (chosenAnswersList.length < 4) {
                 chosenAnswersList.push({ id: "dummy-" + Math.random(), en: "???", hmo: "???", es: "???" });
             }
-            
             chosenAnswersList.sort(() => Math.random() - 0.5);
 
-            const choicesBox = document.getElementById('quiz-choices-stack-box');
-            choicesBox.innerHTML = '';
-
+            const choicesBox = document.getElementById('quiz-choices-stack-box'); choicesBox.innerHTML = '';
             chosenAnswersList.forEach(cardOption => {
                 const btn = document.createElement('button');
-                btn.className = 'quiz-choice-btn';
-                btn.innerText = cardOption[activeQuizTargetLang] || "???";
+                btn.className = 'quiz-choice-btn'; btn.innerText = cardOption[activeQuizTargetLang] || "???";
                 btn.dataset.cardId = cardOption.id; 
                 
                 btn.onclick = () => {
                     if (targetChoiceBtnBlocked || btn.classList.contains('wrong-choice')) return;
-                    
-                    if (activeQuizTargetLang === 'hmo') {
-                        if (cardOption.audioDataUrl) {
-                            window.speechSynthesis.cancel();
-                            const choiceAudio = new Audio(cardOption.audioDataUrl);
-                            choiceAudio.play();
-                        } else {
-                            speakTTS(btn.innerText, 'en'); 
-                        }
+                    if (activeQuizTargetLang === 'hmo' && cardOption.audioDataUrl) {
+                        window.speechSynthesis.cancel(); new Audio(cardOption.audioDataUrl).play();
                     } else {
                         speakTTS(btn.innerText, activeQuizTargetLang);
                     }
-
-                    const allBtns = choicesBox.getElementsByClassName('quiz-choice-btn');
-                    for(let b of allBtns) {
+                    for(let b of choicesBox.getElementsByClassName('quiz-choice-btn')) {
                         if (!b.classList.contains('wrong-choice')) b.classList.remove('selected-choice');
                     }
-                    
-                    btn.classList.add('selected-choice');
-                    currentlySelectedCardId = cardOption.id;
+                    btn.classList.add('selected-choice'); currentlySelectedCardId = cardOption.id;
                 };
-                
                 choicesBox.appendChild(btn);
             });
         }
 
         function submitSelectedQuizAnswer() {
-            if (targetChoiceBtnBlocked) return;
-            if (!currentlySelectedCardId) {
-                alert("Please click an option first!");
-                return;
-            }
-
-            const choicesBox = document.getElementById('quiz-choices-stack-box');
-            const buttons = choicesBox.getElementsByClassName('quiz-choice-btn');
+            if (targetChoiceBtnBlocked || !currentlySelectedCardId) return;
+            const buttons = document.getElementById('quiz-choices-stack-box').getElementsByClassName('quiz-choice-btn');
 
             if (currentlySelectedCardId === activeQuizTargetCard.id) {
-                targetChoiceBtnBlocked = true;
-                document.getElementById('quiz-check-btn').style.display = 'none';
-
+                targetChoiceBtnBlocked = true; document.getElementById('quiz-check-btn').style.display = 'none';
                 speakTTS("good job", "en");
-
                 for (let btn of buttons) {
                     if (btn.dataset.cardId === activeQuizTargetCard.id) {
-                        btn.classList.remove('selected-choice');
-                        btn.classList.add('correct-choice');
+                        btn.classList.remove('selected-choice'); btn.classList.add('correct-choice');
                     }
                 }
-
-                if (questionFirstAttempt) {
-                    scoreCounter++;
-                }
-
-                setTimeout(() => {
-                    activeQuizIndex++;
-                    loadNextQuizQuestion();
-                }, 1800);
-
+                if (questionFirstAttempt) scoreCounter++;
+                setTimeout(() => { activeQuizIndex++; loadNextQuizQuestion(); }, 1800);
             } else {
-                speakTTS("try again", "en");
-                questionFirstAttempt = false; 
-
+                speakTTS("try again", "en"); questionFirstAttempt = false; 
                 for (let btn of buttons) {
                     if (btn.classList.contains('selected-choice')) {
-                        btn.classList.remove('selected-choice');
-                        btn.classList.add('wrong-choice');
+                        btn.classList.remove('selected-choice'); btn.classList.add('wrong-choice');
                     }
                 }
                 currentlySelectedCardId = null; 
             }
         }
 
-        // --- 7. MANAGEMENT HANDLERS ---
+        // --- 7. FILE MANAGEMENT AND AUXILIARY CONTROLS ---
         function openAudioModal(id) {
-            currentActiveId = id;
-            const wordObj = words.find(w => w.id === id);
+            currentActiveId = id; const wordObj = words.find(w => w.id === id);
             document.getElementById('modal-word-title').innerText = `🎙️ ${wordObj.hmo}`;
             document.getElementById('modal-rec-btn').onclick = () => handleModalRecording(id);
             document.getElementById('audio-modal').classList.add('active');
@@ -1253,30 +1363,22 @@
         async function handleModalRecording(id) {
             const recBtn = document.getElementById('modal-rec-btn');
             if (activeMediaRecorder && activeMediaRecorder.state === "recording") {
-                activeMediaRecorder.stop();
-                recBtn.innerText = "🎤 Record Voice";
-                return;
+                activeMediaRecorder.stop(); recBtn.innerText = "🎤 Record Voice"; return;
             }
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                activeMediaRecorder = new MediaRecorder(stream);
-                activeAudioChunks = [];
-                activeMediaRecorder.ondataavailable = e => activeAudioChunks.push(e.data);
+                activeMediaRecorder = new MediaRecorder(stream); activeAudioChunks = [];
+                activeMediaRecorder.ondataavailable = e => { if (e.data.size > 0) activeAudioChunks.push(e.data); };
                 activeMediaRecorder.onstop = () => {
-                    const blob = new Blob(activeAudioChunks, { type: 'audio/wav' });
-                    const reader = new FileReader();
-                    reader.readAsDataURL(blob);
+                    const blob = new Blob(activeAudioChunks, { type: 'audio/webm' });
+                    const reader = new FileReader(); reader.readAsDataURL(blob);
                     reader.onloadend = () => {
                         const targetCard = words.find(w => w.id === id);
-                        if(targetCard) {
-                            targetCard.audioDataUrl = reader.result;
-                            renderCards();
-                        }
+                        if(targetCard) { targetCard.audioDataUrl = reader.result; renderCards(); }
                     };
                     stream.getTracks().forEach(t => t.stop());
                 };
-                activeMediaRecorder.start();
-                recBtn.innerText = "🛑 Stop Recording";
+                activeMediaRecorder.start(); recBtn.innerText = "🛑 Stop Recording";
             } catch (err) { alert("Microphone access blocked."); }
         }
 
@@ -1284,16 +1386,13 @@
             if (currentlyPlayingCardId !== null) return;
             const wordObj = words.find(w => w.id === id);
             if (wordObj && wordObj.audioDataUrl) {
-                currentlyPlayingCardId = id;
-                const audio = new Audio(wordObj.audioDataUrl);
-                audio.onended = () => currentlyPlayingCardId = null;
-                audio.play();
+                currentlyPlayingCardId = id; const audio = new Audio(wordObj.audioDataUrl);
+                audio.onended = () => currentlyPlayingCardId = null; audio.play();
             }
         }
 
         function openTextModal(id) {
-            currentActiveId = id;
-            const wordObj = words.find(w => w.id === id);
+            currentActiveId = id; const wordObj = words.find(w => w.id === id);
             document.getElementById('edit-modal-en').value = wordObj.en;
             document.getElementById('edit-modal-hmo').value = wordObj.hmo;
             document.getElementById('edit-modal-es').value = wordObj.es;
@@ -1306,8 +1405,7 @@
                 targetCard.en = document.getElementById('edit-modal-en').value.trim();
                 targetCard.hmo = document.getElementById('edit-modal-hmo').value.trim();
                 targetCard.es = document.getElementById('edit-modal-es').value.trim();
-                renderCards();
-                closeTextModal();
+                renderCards(); closeTextModal();
             }
         }
 
@@ -1334,9 +1432,7 @@
         }
 
         function terminateQuizGameplayLoop() {
-            // --- ANTI-CHEAT: Lift background blur completely ---
             document.getElementById('main-content-wrapper').classList.remove('active-game-blur');
-
             document.getElementById('quiz-gameplay-modal').classList.remove('active');
             if (window.speechSynthesis) window.speechSynthesis.cancel();
         }
