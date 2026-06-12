@@ -407,7 +407,7 @@
             border-radius: 10px;
         }
 
-        /* --- INTERACTIVE GAME MODE ARCHITECTURE (FULL IMAGE OPTIMIZED) --- */
+        /* --- INTERACTIVE GAME MODE ARCHITECTURE --- */
         #quiz-gameplay-modal .modal-card {
             max-width: 440px !important; 
             padding: 20px !important;   
@@ -644,6 +644,7 @@
         let activeAudioChunks = [];
         let currentlyPlayingCardId = null;
         let translationDebounceTimer = null;
+        let cachedSystemVoices = [];
 
         // --- GAME ARCHITECTURE VARIABLE SYSTEM STATE ---
         let quizLangMode = "en"; 
@@ -654,7 +655,7 @@
         let scoreCounter = 0;
         let targetChoiceBtnBlocked = false;
         let currentlySelectedCardId = null;
-        let questionFirstAttempt = true; // Tracks if current card was missed to control scoring cleanly
+        let questionFirstAttempt = true;
 
         // --- 2. GITHUB JSON INPUT LOADER & COMPREHENSIVE FALLBACK STARTERS ---
         async function fetchMasterJsonData() {
@@ -975,26 +976,36 @@
             document.getElementById('add-media').value = '';
         }
 
-        // --- 5. COMPREHENSIVE TEXT-TO-SPEECH WITH SMOOTH ENGLISH MATCH ROUTING ---
+        // --- 5. COMPREHENSIVE CROSS-PLATFORM TEXT-TO-SPEECH (CHROMEBOOK INSTANT OPTIMIZED) ---
+        function loadSystemVoices() {
+            if (!window.speechSynthesis) return;
+            cachedSystemVoices = window.speechSynthesis.getVoices();
+        }
+        
+        loadSystemVoices();
+        if (window.speechSynthesis && window.speechSynthesis.onvoiceschanged !== undefined) {
+            window.speechSynthesis.onvoiceschanged = loadSystemVoices;
+        }
+
         function speakTTS(text, lang) {
             if (!window.speechSynthesis) return;
             
             window.speechSynthesis.cancel(); 
 
             const utterance = new SpeechSynthesisUtterance(text);
+            const currentVoices = window.speechSynthesis.getVoices();
+            const activeVoiceLibrary = currentVoices.length > 0 ? currentVoices : cachedSystemVoices;
             
             if (lang === 'en') {
                 utterance.lang = 'en-US';
                 utterance.rate = 0.90;  
                 utterance.pitch = 1.0;
 
-                if (window.speechSynthesis.getVoices) {
-                    const voices = window.speechSynthesis.getVoices();
-                    
-                    let bestVoice = voices.find(v => v.lang.startsWith('en') && v.name.includes('Natural')) || 
-                                    voices.find(v => v.lang.startsWith('en') && v.name.includes('Google')) ||  
-                                    voices.find(v => v.lang.startsWith('en') && v.name.includes('Samantha')) || 
-                                    voices.find(v => v.lang.toLowerCase().startsWith('en'));                  
+                if (activeVoiceLibrary.length > 0) {
+                    let bestVoice = activeVoiceLibrary.find(v => v.lang.startsWith('en') && v.name.includes('Natural')) || 
+                                    activeVoiceLibrary.find(v => v.lang.startsWith('en') && v.name.includes('Google')) ||  
+                                    activeVoiceLibrary.find(v => v.lang.startsWith('en') && v.name.includes('Samantha')) || 
+                                    activeVoiceLibrary.find(v => v.lang.toLowerCase().startsWith('en'));                  
                     
                     if (bestVoice) utterance.voice = bestVoice;
                 }
@@ -1002,9 +1013,8 @@
                 utterance.lang = 'es-ES';
                 utterance.rate = 0.85; 
                 utterance.pitch = 1.05; 
-                if (window.speechSynthesis.getVoices) {
-                    const systemVoices = window.speechSynthesis.getVoices();
-                    let matchedVoice = systemVoices.find(v => v.lang.toLowerCase() === utterance.lang.toLowerCase() || v.lang.toLowerCase().startsWith(lang));
+                if (activeVoiceLibrary.length > 0) {
+                    let matchedVoice = activeVoiceLibrary.find(v => v.lang.toLowerCase() === utterance.lang.toLowerCase() || v.lang.toLowerCase().startsWith(lang));
                     if (matchedVoice) utterance.voice = matchedVoice;
                 }
             } else {
@@ -1018,7 +1028,7 @@
 
         function primeGlobalAudioHardwareChannels() {
             if (window.speechSynthesis) {
-                window.speechSynthesis.getVoices();
+                loadSystemVoices();
                 const silencer = new SpeechSynthesisUtterance('');
                 window.speechSynthesis.speak(silencer);
             }
@@ -1069,7 +1079,7 @@
         function loadNextQuizQuestion() {
             targetChoiceBtnBlocked = false;
             currentlySelectedCardId = null;
-            questionFirstAttempt = true; // Reset attempt tracker for the new question
+            questionFirstAttempt = true; 
             document.getElementById('quiz-check-btn').style.display = 'block';
             
             if (activeQuizIndex >= activeQuizCardSubset.length) {
@@ -1131,7 +1141,7 @@
                 const btn = document.createElement('button');
                 btn.className = 'quiz-choice-btn';
                 btn.innerText = cardOption[activeQuizTargetLang] || "???";
-                btn.dataset.cardId = cardOption.id; // Store option key mapping references
+                btn.dataset.cardId = cardOption.id; 
                 
                 btn.onclick = () => {
                     if (targetChoiceBtnBlocked || btn.classList.contains('wrong-choice')) return;
@@ -1172,12 +1182,10 @@
             const buttons = choicesBox.getElementsByClassName('quiz-choice-btn');
 
             if (currentlySelectedCardId === activeQuizTargetCard.id) {
-                // CORRECT CHOICE FLOW
                 targetChoiceBtnBlocked = true;
                 document.getElementById('quiz-check-btn').style.display = 'none';
 
-                // Play custom "yay!" sound profile synthesis
-                speakTTS("yay!", "en");
+                speakTTS("good job", "en");
 
                 for (let btn of buttons) {
                     if (btn.dataset.cardId === activeQuizTargetCard.id) {
@@ -1186,7 +1194,6 @@
                     }
                 }
 
-                // Award points only if it wasn't missed previously
                 if (questionFirstAttempt) {
                     scoreCounter++;
                 }
@@ -1197,9 +1204,8 @@
                 }, 1800);
 
             } else {
-                // WRONG CHOICE FLOW - Try Again Loop Architecture
                 speakTTS("try again", "en");
-                questionFirstAttempt = false; // Flag that card was missed so scoring stays accurate
+                questionFirstAttempt = false; 
 
                 for (let btn of buttons) {
                     if (btn.classList.contains('selected-choice')) {
@@ -1207,7 +1213,7 @@
                         btn.classList.add('wrong-choice');
                     }
                 }
-                currentlySelectedCardId = null; // Forces kid to choose a new alternative option
+                currentlySelectedCardId = null; 
             }
         }
 
