@@ -665,7 +665,7 @@
                 categories = data.categories || [];
                 words = data.words || [];
             } catch (err) {
-                console.log("Could not load flashcards.json. Injecting starter bundles.", err);
+                console.log("Loading flashcards layout from restored defaults bundle.", err);
                 categories = [
                     { id: "all", name: "All Cards", icon: "⭐" },
                     { id: "animals", name: "Animals", icon: "🦁" },
@@ -990,7 +990,6 @@
         function speakTTS(text, lang) {
             if (!window.speechSynthesis) return;
             
-            // Critical forced cancellation layer prevents speech queue deadlock on Chromebook engines
             window.speechSynthesis.cancel(); 
 
             const utterance = new SpeechSynthesisUtterance(text);
@@ -1011,7 +1010,6 @@
                     if (bestVoice) utterance.voice = bestVoice;
                 }
             } else if (lang === 'es') {
-                // Configured with exact BCP-47 identifiers for Spanish compatibility
                 utterance.lang = 'es-ES';
                 utterance.rate = 0.85; 
                 utterance.pitch = 1.05; 
@@ -1023,7 +1021,6 @@
                 utterance.lang = lang;
             }
 
-            // Asynchronous processing timeout wrapper completely prevents ChromeOS audio pipeline dropouts
             setTimeout(() => {
                 window.speechSynthesis.speak(utterance);
             }, 50);
@@ -1275,7 +1272,6 @@
             }
         }
 
-        UX for editing text inputs on cards
         function openTextModal(id) {
             currentActiveId = id;
             const wordObj = words.find(w => w.id === id);
