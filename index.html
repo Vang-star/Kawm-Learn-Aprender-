@@ -407,15 +407,16 @@
             border-radius: 10px;
         }
 
-        /* --- INTERACTIVE QUIZ MODAL ARCHITECTURE --- */
+        /* --- INTERACTIVE GAME MODE ARCHITECTURE (FULL IMAGE OPTIMIZED) --- */
         #quiz-gameplay-modal .modal-card {
-            max-width: 380px !important; 
+            max-width: 440px !important; 
             padding: 20px !important;   
         }
 
         .quiz-image-frame {
             width: 100%; 
-            height: 160px; 
+            min-height: 200px;
+            max-height: 280px;
             background: #f0f0f0; 
             border-radius: 18px; 
             overflow: hidden; 
@@ -426,7 +427,10 @@
             justify-content: center;
         }
         .quiz-image-frame img, .quiz-image-frame video {
-            width: 100%; height: 100%; object-fit: cover;
+            width: 100%; 
+            height: 100%; 
+            object-fit: contain;
+            background: #f0f0f0;
         }
         .quiz-options-stack {
             display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px;
@@ -491,7 +495,7 @@
 
     <div class="mode-toggle-container">
         <button id="mode-toggle-btn" class="btn-mode-switch kids-active" onclick="toggleApplicationMode()">🔒 Kids Mode (Safe & Locked)</button>
-        <button class="btn-global-quiz" onclick="openQuizSetupModal('all')">🎮 Open Quiz Hub</button>
+        <button class="btn-global-quiz" onclick="openQuizSetupModal('all')">🎮 Open Game Hub</button>
     </div>
 
     <div class="creator-flex">
@@ -592,13 +596,13 @@
 
     <div class="modal-overlay" id="quiz-setup-modal">
         <div class="modal-card">
-            <h2>🎮 Quiz Mode Setup</h2>
+            <h2>🎮 Game Mode Setup</h2>
             <p style="margin-bottom:15px; font-size: 0.95rem;">Pick your categories and language to practice!</p>
             
             <label class="quiz-config-label">📁 Choose Topic / Category:</label>
             <select class="quiz-lang-selector" id="quiz-category-config"></select>
 
-            <label class="quiz-config-label">🌍 Target Quiz Language:</label>
+            <label class="quiz-config-label">🌍 Target Game Language:</label>
             <select class="quiz-lang-selector" id="quiz-lang-config">
                 <option value="en">English Only 🇺🇸</option>
                 <option value="hmo">Hmong Only 🌿</option>
@@ -625,7 +629,7 @@
                 </div>
 
             <button class="btn-submit-answer" id="quiz-check-btn" onclick="submitSelectedQuizAnswer()">✔️ Check Answer</button>
-            <button class="btn-close" style="background:#e74c3c; width:100%; border-radius:12px; padding:10px; font-size:1.1rem;" onclick="terminateQuizGameplayLoop()">Exit Quiz 🛑</button>
+            <button class="btn-close" style="background:#e74c3c; width:100%; border-radius:12px; padding:10px; font-size:1.1rem;" onclick="terminateQuizGameplayLoop()">Exit Game 🛑</button>
         </div>
     </div>
 
@@ -650,6 +654,7 @@
         let scoreCounter = 0;
         let targetChoiceBtnBlocked = false;
         let currentlySelectedCardId = null;
+        let questionFirstAttempt = true; // Tracks if current card was missed to control scoring cleanly
 
         // --- 2. GITHUB JSON INPUT LOADER & COMPREHENSIVE FALLBACK STARTERS ---
         async function fetchMasterJsonData() {
@@ -721,7 +726,7 @@
 
                 button.innerHTML = `
                     <span>${cat.icon}</span> ${cat.name}
-                    <span class="game-icon-trigger" title="Quiz this category" onclick="event.stopPropagation(); openQuizSetupModal('${cat.id}')">🎮</span>
+                    <span class="game-icon-trigger" title="Play this category" onclick="event.stopPropagation(); openQuizSetupModal('${cat.id}')">🎮</span>
                     ${adminCategoryActions}
                 `;
                 
@@ -814,13 +819,9 @@
             }
             if (!confirm("Are you sure you want to delete this entire topic category?")) return;
 
-            // Remove target category
             categories = categories.filter(c => c.id !== catId);
-            
-            // Find a safety backup route category destination (avoiding 'all')
             const safetyBackup = categories.find(c => c.id !== 'all');
             
-            // Re-route stray flashcards safely to prevent software breaks
             words.forEach(w => {
                 if (w.category === catId) {
                     w.category = safetyBackup.id;
@@ -978,29 +979,26 @@
         function speakTTS(text, lang) {
             if (!window.speechSynthesis) return;
             
-            // Force-flush any rendering locks before speaking next string
             window.speechSynthesis.cancel(); 
 
             const utterance = new SpeechSynthesisUtterance(text);
             
             if (lang === 'en') {
                 utterance.lang = 'en-US';
-                utterance.rate = 0.90;  // Balanced speed profile for clear comprehension
+                utterance.rate = 0.90;  
                 utterance.pitch = 1.0;
 
                 if (window.speechSynthesis.getVoices) {
                     const voices = window.speechSynthesis.getVoices();
                     
-                    // Platform-aware priority logic (Windows, Chromebook, and iOS native profiles)
-                    let bestVoice = voices.find(v => v.lang.startsWith('en') && v.name.includes('Natural')) || // Windows Edge Natural
-                                    voices.find(v => v.lang.startsWith('en') && v.name.includes('Google')) ||  // ChromeOS High-Quality
-                                    voices.find(v => v.lang.startsWith('en') && v.name.includes('Samantha')) || // iOS Preferred Apple voice
-                                    voices.find(v => v.lang.toLowerCase().startsWith('en'));                  // standard baseline fallback
+                    let bestVoice = voices.find(v => v.lang.startsWith('en') && v.name.includes('Natural')) || 
+                                    voices.find(v => v.lang.startsWith('en') && v.name.includes('Google')) ||  
+                                    voices.find(v => v.lang.startsWith('en') && v.name.includes('Samantha')) || 
+                                    voices.find(v => v.lang.toLowerCase().startsWith('en'));                  
                     
                     if (bestVoice) utterance.voice = bestVoice;
                 }
             } else if (lang === 'es') {
-                // UNCHANGED SPANISH TTS CODE RULE EXPLICITLY APPLIED BELOW
                 utterance.lang = 'es-ES';
                 utterance.rate = 0.85; 
                 utterance.pitch = 1.05; 
@@ -1013,7 +1011,6 @@
                 utterance.lang = lang;
             }
 
-            // Cross-Platform Asynchronous Fire Trigger
             setTimeout(() => {
                 window.speechSynthesis.speak(utterance);
             }, 50);
@@ -1072,10 +1069,11 @@
         function loadNextQuizQuestion() {
             targetChoiceBtnBlocked = false;
             currentlySelectedCardId = null;
+            questionFirstAttempt = true; // Reset attempt tracker for the new question
             document.getElementById('quiz-check-btn').style.display = 'block';
             
             if (activeQuizIndex >= activeQuizCardSubset.length) {
-                alert(`🎉 Great Job! Quiz complete! Score: ${scoreCounter} / ${activeQuizCardSubset.length}`);
+                alert(`🎉 Great Job! Game complete! Score: ${scoreCounter} / ${activeQuizCardSubset.length}`);
                 terminateQuizGameplayLoop();
                 return;
             }
@@ -1133,9 +1131,10 @@
                 const btn = document.createElement('button');
                 btn.className = 'quiz-choice-btn';
                 btn.innerText = cardOption[activeQuizTargetLang] || "???";
+                btn.dataset.cardId = cardOption.id; // Store option key mapping references
                 
                 btn.onclick = () => {
-                    if (targetChoiceBtnBlocked) return;
+                    if (targetChoiceBtnBlocked || btn.classList.contains('wrong-choice')) return;
                     
                     if (activeQuizTargetLang === 'hmo') {
                         if (cardOption.audioDataUrl) {
@@ -1150,7 +1149,9 @@
                     }
 
                     const allBtns = choicesBox.getElementsByClassName('quiz-choice-btn');
-                    for(let b of allBtns) b.classList.remove('selected-choice');
+                    for(let b of allBtns) {
+                        if (!b.classList.contains('wrong-choice')) b.classList.remove('selected-choice');
+                    }
                     
                     btn.classList.add('selected-choice');
                     currentlySelectedCardId = cardOption.id;
@@ -1166,37 +1167,48 @@
                 alert("Please click an option first!");
                 return;
             }
-            
-            targetChoiceBtnBlocked = true;
-            document.getElementById('quiz-check-btn').style.display = 'none';
 
             const choicesBox = document.getElementById('quiz-choices-stack-box');
             const buttons = choicesBox.getElementsByClassName('quiz-choice-btn');
 
             if (currentlySelectedCardId === activeQuizTargetCard.id) {
+                // CORRECT CHOICE FLOW
+                targetChoiceBtnBlocked = true;
+                document.getElementById('quiz-check-btn').style.display = 'none';
+
+                // Play custom "yay!" sound profile synthesis
+                speakTTS("yay!", "en");
+
                 for (let btn of buttons) {
-                    if (btn.classList.contains('selected-choice')) {
+                    if (btn.dataset.cardId === activeQuizTargetCard.id) {
                         btn.classList.remove('selected-choice');
                         btn.classList.add('correct-choice');
                     }
                 }
-                scoreCounter++;
+
+                // Award points only if it wasn't missed previously
+                if (questionFirstAttempt) {
+                    scoreCounter++;
+                }
+
+                setTimeout(() => {
+                    activeQuizIndex++;
+                    loadNextQuizQuestion();
+                }, 1800);
+
             } else {
+                // WRONG CHOICE FLOW - Try Again Loop Architecture
+                speakTTS("try again", "en");
+                questionFirstAttempt = false; // Flag that card was missed so scoring stays accurate
+
                 for (let btn of buttons) {
                     if (btn.classList.contains('selected-choice')) {
                         btn.classList.remove('selected-choice');
                         btn.classList.add('wrong-choice');
                     }
-                    if (btn.innerText === activeQuizTargetCard[activeQuizTargetLang]) {
-                        btn.classList.add('correct-choice');
-                    }
                 }
+                currentlySelectedCardId = null; // Forces kid to choose a new alternative option
             }
-
-            setTimeout(() => {
-                activeQuizIndex++;
-                loadNextQuizQuestion();
-            }, 1800);
         }
 
         // --- 7. MANAGEMENT HANDLERS ---
@@ -1301,7 +1313,6 @@
             window.speechSynthesis.cancel();
         }
 
-        // Initialize application build data
         fetchMasterJsonData();
     </script>
 </body>
