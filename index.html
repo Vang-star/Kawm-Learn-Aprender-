@@ -21,6 +21,18 @@
             padding: 20px;
         }
 
+        /* Anti-Cheat Dynamic Blur Container */
+        .game-blur-wrapper {
+            transition: filter 0.4s ease, pointer-events 0.2s ease;
+        }
+        
+        /* Triggered dynamically when quiz gameplay loop executes */
+        .game-blur-wrapper.active-game-blur {
+            filter: blur(12px);
+            pointer-events: none;
+            user-select: none;
+        }
+
         header {
             text-align: center;
             margin-bottom: 20px;
@@ -487,67 +499,69 @@
 </head>
 <body>
 
-    <header>
-        <h1>🌟 Kawm / Learn / Aprender! 🌟</h1>
-        <p id="header-instructions">Welcome! Tap languages to hear them, drag cards to sort them, or tap 🎮 to play games!</p>
-    </header>
+    <div id="main-content-wrapper" class="game-blur-wrapper">
+        <header>
+            <h1>🌟 Kawm / Learn / Aprender! 🌟</h1>
+            <p id="header-instructions">Welcome! Tap languages to hear them, drag cards to sort them, or tap 🎮 to play games!</p>
+        </header>
 
-    <div class="mode-toggle-container">
-        <button id="mode-toggle-btn" class="btn-mode-switch kids-active" onclick="toggleApplicationMode()">🔒 Kids Mode (Safe & Locked)</button>
-        <button class="btn-global-quiz" onclick="openQuizSetupModal('all')">🎮 Open Game Hub</button>
-    </div>
-
-    <div class="creator-flex">
-        <div class="creator-panel" id="export-panel" style="border: 4px dashed #a55eea;">
-            <h3>💾 Save Card Changes to GitHub</h3>
-            <p style="font-size:0.9rem; margin: 0 0 10px 0;">To save modifications forever, click the button below to generate your updated code file, copy it, and paste it inside your <strong>flashcards.json</strong> file on GitHub!</p>
-            <button onclick="generateCleanJsonBlock()" style="background:#a55eea; box-shadow: 0 4px 0 #783cb5; width:100%;">🔄 Generate Clean JSON File Code</button>
-            <textarea id="json-export-area" class="export-output-box" placeholder="Your file data will appear here..." readonly></textarea>
+        <div class="mode-toggle-container">
+            <button id="mode-toggle-btn" class="btn-mode-switch kids-active" onclick="toggleApplicationMode()">🔒 Kids Mode (Safe & Locked)</button>
+            <button class="btn-global-quiz" onclick="openQuizSetupModal('all')">🎮 Open Game Hub</button>
         </div>
 
-        <div class="creator-panel" id="category-panel">
-            <h3>📂 Create a New Category</h3>
-            <div class="form-row-split">
+        <div class="creator-flex">
+            <div class="creator-panel" id="export-panel" style="border: 4px dashed #a55eea;">
+                <h3>💾 Save Card Changes to GitHub</h3>
+                <p style="font-size:0.9rem; margin: 0 0 10px 0;">To save modifications forever, click the button below to generate your updated code file, copy it, and paste it inside your <strong>flashcards.json</strong> file on GitHub!</p>
+                <button onclick="generateCleanJsonBlock()" style="background:#a55eea; box-shadow: 0 4px 0 #783cb5; width:100%;">🔄 Generate Clean JSON File Code</button>
+                <textarea id="json-export-area" class="export-output-box" placeholder="Your file data will appear here..." readonly></textarea>
+            </div>
+
+            <div class="creator-panel" id="category-panel">
+                <h3>📂 Create a New Category</h3>
+                <div class="form-row-split">
+                    <div class="form-group">
+                        <label>Category Emoji Icon:</label>
+                        <input type="text" id="cat-icon" placeholder="e.g., 🥦, 🚀, 🧸, 🚗">
+                    </div>
+                    <div class="form-group">
+                        <label>Category Name:</label>
+                        <input type="text" id="cat-name" placeholder="e.g., Vegetables, Space...">
+                    </div>
+                </div>
+                <button class="btn-add-cat" onclick="addNewCategory()">Create Category 📂</button>
+            </div>
+
+            <div class="creator-panel" id="creator-panel">
+                <h3>➕ Add a New Flashcard</h3>
                 <div class="form-group">
-                    <label>Category Emoji Icon:</label>
-                    <input type="text" id="cat-icon" placeholder="e.g., 🥦, 🚀, 🧸, 🚗">
+                    <label>Assigned Category:</label>
+                    <select id="add-category-select"></select>
                 </div>
                 <div class="form-group">
-                    <label>Category Name:</label>
-                    <input type="text" id="cat-name" placeholder="e.g., Vegetables, Space...">
+                    <label>Type English Word:</label>
+                    <input type="text" id="add-en" placeholder="e.g., Elephant..." oninput="handleDualAutoTranslation()">
                 </div>
+                <div class="form-group">
+                    <label>Hmong Translation (Auto-translating...):</label>
+                    <input type="text" id="add-hmo" placeholder="Hmong word will appear...">
+                </div>
+                <div class="form-group">
+                    <label>Spanish Translation (Auto-translating...):</label>
+                    <input type="text" id="add-es" placeholder="Spanish word will appear...">
+                </div>
+                <div class="form-group">
+                    <label>Upload custom image/video (Optional):</label>
+                    <input type="file" id="add-media" accept="image/*,video/*">
+                </div>
+                <button class="btn-add" onclick="addNewWord()">Add Flashcard ✨</button>
             </div>
-            <button class="btn-add-cat" onclick="addNewCategory()">Create Category 📂</button>
         </div>
 
-        <div class="creator-panel" id="creator-panel">
-            <h3>➕ Add a New Flashcard</h3>
-            <div class="form-group">
-                <label>Assigned Category:</label>
-                <select id="add-category-select"></select>
-            </div>
-            <div class="form-group">
-                <label>Type English Word:</label>
-                <input type="text" id="add-en" placeholder="e.g., Elephant..." oninput="handleDualAutoTranslation()">
-            </div>
-            <div class="form-group">
-                <label>Hmong Translation (Auto-translating...):</label>
-                <input type="text" id="add-hmo" placeholder="Hmong word will appear...">
-            </div>
-            <div class="form-group">
-                <label>Spanish Translation (Auto-translating...):</label>
-                <input type="text" id="add-es" placeholder="Spanish word will appear...">
-            </div>
-            <div class="form-group">
-                <label>Upload custom image/video (Optional):</label>
-                <input type="file" id="add-media" accept="image/*,video/*">
-            </div>
-            <button class="btn-add" onclick="addNewWord()">Add Flashcard ✨</button>
-        </div>
+        <div class="category-container" id="category-filters-row"></div>
+        <div class="grid" id="flashcard-grid"></div>
     </div>
-
-    <div class="category-container" id="category-filters-row"></div>
-    <div class="grid" id="flashcard-grid"></div>
 
     <div class="modal-overlay" id="audio-modal">
         <div class="modal-card">
@@ -1069,6 +1083,10 @@
             scoreCounter = 0;
             
             closeQuizSetupModal();
+
+            // --- ANTI-CHEAT: Trigger background blur class layer ---
+            document.getElementById('main-content-wrapper').classList.add('active-game-blur');
+
             document.getElementById('quiz-gameplay-modal').classList.add('active');
             loadNextQuizQuestion();
         }
@@ -1113,7 +1131,6 @@
                 mediaBox.innerHTML = `<span style="font-size:3rem;">🖼️</span>`;
             }
 
-            // --- FIXED: WRONG CHOICES POOLED STRICTLY FROM THE SAME CATEGORY ---
             let wrongChoicesPool = words.filter(w => w.id !== activeQuizTargetCard.id && w.category === activeQuizTargetCard.category);
             wrongChoicesPool.sort(() => Math.random() - 0.5);
 
@@ -1122,7 +1139,6 @@
                 chosenAnswersList.push(wrongChoicesPool[i]);
             }
             
-            // Failover Backup Plan: If the specific category runs out of items, pull from general dataset
             if (chosenAnswersList.length < 4) {
                 let generalBackupPool = words.filter(w => !chosenAnswersList.some(selected => selected.id === w.id));
                 generalBackupPool.sort(() => Math.random() - 0.5);
@@ -1131,7 +1147,6 @@
                 }
             }
             
-            // Hard backup to safeguard against empty apps
             while(chosenAnswersList.length < 4) {
                 chosenAnswersList.push({ id: "dummy-" + Math.random(), en: "???", hmo: "???", es: "???" });
             }
@@ -1319,6 +1334,9 @@
         }
 
         function terminateQuizGameplayLoop() {
+            // --- ANTI-CHEAT: Lift background blur completely ---
+            document.getElementById('main-content-wrapper').classList.remove('active-game-blur');
+
             document.getElementById('quiz-gameplay-modal').classList.remove('active');
             if (window.speechSynthesis) window.speechSynthesis.cancel();
         }
