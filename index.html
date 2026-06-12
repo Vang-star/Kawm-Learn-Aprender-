@@ -657,7 +657,7 @@
         let currentlySelectedCardId = null;
         let questionFirstAttempt = true;
 
-        // --- 2. GITHUB JSON INPUT LOADER & COMPREHENSIVE FALLBACK STARTERS ---
+        // --- 2. GITHUB JSON INPUT LOADER & RESTORED DEFAULTS ---
         async function fetchMasterJsonData() {
             try {
                 const response = await fetch('flashcards.json?nocache=' + Date.now());
@@ -665,7 +665,7 @@
                 categories = data.categories || [];
                 words = data.words || [];
             } catch (err) {
-                console.log("Loading flashcards layout from restored defaults bundle.", err);
+                console.log("Restoring starter flashcard bundles directly.", err);
                 categories = [
                     { id: "all", name: "All Cards", icon: "⭐" },
                     { id: "animals", name: "Animals", icon: "🦁" },
@@ -797,7 +797,6 @@
             populateCategorySelectDropdowns();
         }
 
-        // --- PARENT MANAGER CATEGORY MODIFICATION HANDLERS ---
         function editCategoryMetadata(catId) {
             const cat = categories.find(c => c.id === catId);
             if (!cat) return;
@@ -976,7 +975,7 @@
             document.getElementById('add-media').value = '';
         }
 
-        // --- 5. COMPREHENSIVE CROSS-PLATFORM TEXT-TO-SPEECH (CHROMEBOOK INSTANT OPTIMIZED) ---
+        // --- 5. TEXT-TO-SPEECH PIPELINE (CHROMEBOOK INSTANT OPTIMIZED) ---
         function loadSystemVoices() {
             if (!window.speechSynthesis) return;
             cachedSystemVoices = window.speechSynthesis.getVoices();
