@@ -407,7 +407,6 @@
             border-radius: 10px;
         }
 
-        /* --- INTERACTIVE GAME MODE ARCHITECTURE --- */
         #quiz-gameplay-modal .modal-card {
             max-width: 440px !important; 
             padding: 20px !important;   
@@ -620,13 +619,11 @@
         <div class="modal-card">
             <div class="quiz-score-banner" id="quiz-progress-text">Question 0 of 0</div>
             
-            <div class="quiz-image-frame" id="quiz-media-display-frame">
-                </div>
+            <div class="quiz-image-frame" id="quiz-media-display-frame"></div>
 
             <p style="font-weight:bold; font-size:1.1rem; margin-top:0;" id="quiz-instruction-prompt">Click the correct word!</p>
             
-            <div class="quiz-options-stack" id="quiz-choices-stack-box">
-                </div>
+            <div class="quiz-options-stack" id="quiz-choices-stack-box"></div>
 
             <button class="btn-submit-answer" id="quiz-check-btn" onclick="submitSelectedQuizAnswer()">✔️ Check Answer</button>
             <button class="btn-close" style="background:#e74c3c; width:100%; border-radius:12px; padding:10px; font-size:1.1rem;" onclick="terminateQuizGameplayLoop()">Exit Game 🛑</button>
@@ -657,7 +654,7 @@
         let currentlySelectedCardId = null;
         let questionFirstAttempt = true;
 
-        // --- 2. GITHUB JSON INPUT LOADER & RESTORED DEFAULTS ---
+        // --- 2. GITHUB JSON INPUT LOADER ---
         async function fetchMasterJsonData() {
             try {
                 const response = await fetch('flashcards.json?nocache=' + Date.now());
@@ -975,59 +972,37 @@
             document.getElementById('add-media').value = '';
         }
 
-        // --- 5. TEXT-TO-SPEECH PIPELINE (CHROMEBOOK INSTANT OPTIMIZED) ---
-        function loadSystemVoices() {
-            if (!window.speechSynthesis) return;
-            cachedSystemVoices = window.speechSynthesis.getVoices();
-        }
-        
-        loadSystemVoices();
-        if (window.speechSynthesis && window.speechSynthesis.onvoiceschanged !== undefined) {
-            window.speechSynthesis.onvoiceschanged = loadSystemVoices;
-        }
-
+        // --- 4. HIGH-PERFORMANCE AUDIO STREAM ENGINE (FIXED FOR CHROMEONS) ---
         function speakTTS(text, lang) {
-            if (!window.speechSynthesis) return;
-            
-            window.speechSynthesis.cancel(); 
-
-            const utterance = new SpeechSynthesisUtterance(text);
-            const currentVoices = window.speechSynthesis.getVoices();
-            const activeVoiceLibrary = currentVoices.length > 0 ? currentVoices : cachedSystemVoices;
-            
-            if (lang === 'en') {
-                utterance.lang = 'en-US';
-                utterance.rate = 0.90;  
-                utterance.pitch = 1.0;
-
-                if (activeVoiceLibrary.length > 0) {
-                    let bestVoice = activeVoiceLibrary.find(v => v.lang.startsWith('en') && v.name.includes('Natural')) || 
-                                    activeVoiceLibrary.find(v => v.lang.startsWith('en') && v.name.includes('Google')) ||  
-                                    activeVoiceLibrary.find(v => v.lang.startsWith('en') && v.name.includes('Samantha')) || 
-                                    activeVoiceLibrary.find(v => v.lang.toLowerCase().startsWith('en'));                  
-                    
-                    if (bestVoice) utterance.voice = bestVoice;
-                }
-            } else if (lang === 'es') {
-                utterance.lang = 'es-ES';
-                utterance.rate = 0.85; 
-                utterance.pitch = 1.05; 
-                if (activeVoiceLibrary.length > 0) {
-                    let matchedVoice = activeVoiceLibrary.find(v => v.lang.toLowerCase() === 'es-es' || v.lang.toLowerCase() === 'es-419' || v.lang.toLowerCase().startsWith('es'));
-                    if (matchedVoice) utterance.voice = matchedVoice;
-                }
-            } else {
-                utterance.lang = lang;
+            if (window.speechSynthesis) {
+                window.speechSynthesis.cancel();
             }
 
-            setTimeout(() => {
-                window.speechSynthesis.speak(utterance);
-            }, 50);
+            let targetLocale = 'en';
+            if (lang === 'es') targetLocale = 'es';
+            if (lang === 'en') targetLocale = 'en';
+
+            const encText = encodeURIComponent(text);
+            const audioUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=${targetLocale}&client=tw-ob&q=${encText}`;
+
+            try {
+                const streamPlayer = new Audio(audioUrl);
+                streamPlayer.volume = 1.0;
+                streamPlayer.play().catch(err => {
+                    console.log("ChromeOS Sandbox standard backup triggered...", err);
+                    if (window.speechSynthesis) {
+                        const backupUtterance = new SpeechSynthesisUtterance(text);
+                        backupUtterance.lang = targetLocale === 'es' ? 'es-ES' : 'en-US';
+                        window.speechSynthesis.speak(backupUtterance);
+                    }
+                });
+            } catch (e) {
+                console.error("Audio redirection fatal crash: ", e);
+            }
         }
 
         function primeGlobalAudioHardwareChannels() {
             if (window.speechSynthesis) {
-                loadSystemVoices();
                 const silencer = new SpeechSynthesisUtterance('');
                 window.speechSynthesis.speak(silencer);
             }
@@ -1035,7 +1010,7 @@
         document.body.addEventListener('click', primeGlobalAudioHardwareChannels, { once: false });
         document.body.addEventListener('touchstart', primeGlobalAudioHardwareChannels, { once: false });
 
-        // --- 6. INTERACTIVE GAME MODE ENGINE ---
+        // --- 5. INTERACTIVE GAME MODE ENGINE ---
         function openQuizSetupModal(catId) {
             if (catId) {
                 document.getElementById('quiz-category-config').value = catId;
@@ -1216,7 +1191,7 @@
             }
         }
 
-        // --- 7. MANAGEMENT HANDLERS ---
+        // --- 6. MANAGEMENT HANDLERS ---
         function openAudioModal(id) {
             currentActiveId = id;
             const wordObj = words.find(w => w.id === id);
@@ -1315,7 +1290,7 @@
 
         function terminateQuizGameplayLoop() {
             document.getElementById('quiz-gameplay-modal').classList.remove('active');
-            window.speechSynthesis.cancel();
+            if (window.speechSynthesis) window.speechSynthesis.cancel();
         }
 
         fetchMasterJsonData();
