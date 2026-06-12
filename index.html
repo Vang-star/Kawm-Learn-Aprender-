@@ -732,36 +732,40 @@
             document.getElementById('add-media').value = '';
         }
 
-        // --- 5. FIXED NEURAL TEXT-TO-SPEECH (TTS) SYSTEM ---
+        // --- 5. ENHANCED TEXT-TO-SPEECH (TTS) SYSTEM ---
         function speakTTS(text, lang) {
+            // Force reset any active system speaker tracks instantly
             window.speechSynthesis.cancel();
             if (activeCloudAudioStream) {
                 activeCloudAudioStream.pause();
                 activeCloudAudioStream = null;
             }
 
-            let fallbackLocale = lang === 'es' ? 'es-MX' : 'en-US';
-            
-            // Re-routed BOTH English and Spanish through high-quality cloud translation voice channels
+            // High-fidelity neural voice generation layer with customized client parameters
             let cloudSpeechUrl = lang === 'es' 
-                ? `https://translate.google.com/translate_tts?ie=UTF-8&tl=es-MX&client=tw-ob&ttsspeed=1&q=${encodeURIComponent(text)}`
-                : `https://translate.google.com/translate_tts?ie=UTF-8&tl=en-US&client=tw-ob&ttsspeed=1&q=${encodeURIComponent(text)}`;
+                ? `https://translate.google.com/translate_tts?ie=UTF-8&tl=es&client=paws&tk=&ttsspeed=1&q=${encodeURIComponent(text)}`
+                : `https://translate.google.com/translate_tts?ie=UTF-8&tl=en&client=paws&tk=&ttsspeed=1&q=${encodeURIComponent(text)}`;
 
             activeCloudAudioStream = new Audio(cloudSpeechUrl);
             activeCloudAudioStream.play().catch((err) => {
-                // Native backup engine fallback
-                executeNativeTTSFallback(text, fallbackLocale);
+                // High-performance fallback channel if cloud drops out
+                executeNativeTTSFallback(text, lang === 'es' ? 'es-MX' : 'en-US');
             });
         }
 
         function executeNativeTTSFallback(text, fallbackLocale) {
             const utterance = new SpeechSynthesisUtterance(text);
-            utterance.rate = 0.85; 
+            utterance.rate = 0.90; // Natural pacing
+            utterance.pitch = 1.05; // Slightly warmer/kid-friendly tone
             utterance.lang = fallbackLocale;
 
             if (window.speechSynthesis.getVoices) {
                 const systemVoices = window.speechSynthesis.getVoices();
-                let optimalVoice = systemVoices.find(v => v.lang.toLowerCase().startsWith(fallbackLocale.substring(0,2)));
+                // Try selecting premium/natural voice components present on the device
+                let optimalVoice = systemVoices.find(v => v.lang.toLowerCase().includes(fallbackLocale.toLowerCase()) && v.name.toLowerCase().includes('natural'));
+                if (!optimalVoice) {
+                    optimalVoice = systemVoices.find(v => v.lang.toLowerCase().startsWith(fallbackLocale.substring(0,2)));
+                }
                 if (optimalVoice) utterance.voice = optimalVoice;
             }
             window.speechSynthesis.speak(utterance);
