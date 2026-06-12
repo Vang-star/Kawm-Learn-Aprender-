@@ -390,6 +390,23 @@
             resize: none;
         }
 
+        .parent-inline-btn {
+            font-size: 0.85rem;
+            padding: 4px 8px;
+            border-radius: 6px;
+            margin: 2px;
+        }
+
+        .btn-danger-card {
+            background-color: #ff4757;
+            box-shadow: 0 3px 0 #d63031;
+            width: 100%;
+            margin-top: 8px;
+            font-size: 1rem;
+            padding: 8px;
+            border-radius: 10px;
+        }
+
         /* --- INTERACTIVE QUIZ MODAL ARCHITECTURE --- */
         #quiz-gameplay-modal .modal-card {
             max-width: 380px !important; 
@@ -694,9 +711,18 @@
                 const button = document.createElement('button');
                 button.className = `category-btn ${activeFilterCategoryId === cat.id ? 'active' : ''}`;
                 
+                let adminCategoryActions = '';
+                if (!isKidsMode && cat.id !== 'all') {
+                    adminCategoryActions = `
+                        <span class="parent-inline-btn" style="background:#ffb142; color:white; border-radius:4px; padding:2px 4px; font-size:0.8rem; margin-left:4px;" onclick="event.stopPropagation(); editCategoryMetadata('${cat.id}')">✏️</span>
+                        <span class="parent-inline-btn" style="background:#ff4757; color:white; border-radius:4px; padding:2px 4px; font-size:0.8rem; margin-left:2px;" onclick="event.stopPropagation(); deleteCategoryEntirely('${cat.id}')">❌</span>
+                    `;
+                }
+
                 button.innerHTML = `
                     <span>${cat.icon}</span> ${cat.name}
                     <span class="game-icon-trigger" title="Quiz this category" onclick="event.stopPropagation(); openQuizSetupModal('${cat.id}')">🎮</span>
+                    ${adminCategoryActions}
                 `;
                 
                 button.onclick = () => {
@@ -765,6 +791,57 @@
             populateCategorySelectDropdowns();
         }
 
+        // --- PARENT MANAGER CATEGORY MODIFICATION HANDLERS ---
+        function editCategoryMetadata(catId) {
+            const cat = categories.find(c => c.id === catId);
+            if (!cat) return;
+            
+            const newIcon = prompt("Change Category Emoji:", cat.icon);
+            const newName = prompt("Change Category Name:", cat.name);
+            
+            if (newIcon && newIcon.trim() !== "") cat.icon = newIcon.trim();
+            if (newName && newName.trim() !== "") cat.name = newName.trim();
+            
+            renderCategoryFilters();
+            populateCategorySelectDropdowns();
+            renderCards();
+        }
+
+        function deleteCategoryEntirely(catId) {
+            if (categories.length <= 2) {
+                alert("You must keep at least one category safe!");
+                return;
+            }
+            if (!confirm("Are you sure you want to delete this entire topic category?")) return;
+
+            // Remove target category
+            categories = categories.filter(c => c.id !== catId);
+            
+            // Find a safety backup route category destination (avoiding 'all')
+            const safetyBackup = categories.find(c => c.id !== 'all');
+            
+            // Re-route stray flashcards safely to prevent software breaks
+            words.forEach(w => {
+                if (w.category === catId) {
+                    w.category = safetyBackup.id;
+                }
+            });
+
+            if (activeFilterCategoryId === catId) {
+                activeFilterCategoryId = "all";
+            }
+
+            renderCategoryFilters();
+            populateCategorySelectDropdowns();
+            renderCards();
+        }
+
+        function deleteFlashcardPermanently(cardId) {
+            if (!confirm("Are you sure you want to delete this flashcard forever?")) return;
+            words = words.filter(w => w.id !== String(cardId));
+            renderCards();
+        }
+
         function toggleApplicationMode() {
             const toggleBtn = document.getElementById('mode-toggle-btn');
             const creatorPanel = document.getElementById('creator-panel');
@@ -783,6 +860,7 @@
                 toggleBtn.classList.add('kids-active');
                 creatorPanel.style.display = "none"; catPanel.style.display = "none"; expPanel.style.display = "none";
             }
+            renderCategoryFilters();
             renderCards(); 
         }
 
@@ -812,6 +890,10 @@
                     </div>
                 `;
 
+                const parentDeleteCardActionHtml = isKidsMode ? '' : `
+                    <button class="btn-danger-card" onclick="deleteFlashcardPermanently('${word.id}')">🗑️ Delete Flashcard</button>
+                `;
+
                 card.innerHTML = `
                     <div class="media-container">
                         ${controlButtonsHtml} ${mediaHtml}
@@ -824,6 +906,7 @@
                     </div>
                     
                     <div class="lang-box lang-es" onclick="speakTTS('${word.es.replace(/'/g, "\\'")}', 'es')"><span class="label">Spanish</span>${word.es}</div>
+                    ${parentDeleteCardActionHtml}
                 `;
                 grid.appendChild(card);
             });
@@ -891,59 +974,60 @@
             document.getElementById('add-media').value = '';
         }
 
-        // --- 5. FIXED SMOOTH CHROMEBOOK CROSS-DEVICE SPEECH ENGINE ---
+        // --- 5. COMPREHENSIVE TEXT-TO-SPEECH WITH SMOOTH ENGLISH MATCH ROUTING ---
         function speakTTS(text, lang) {
             if (!window.speechSynthesis) return;
             
-            // Chromebook Fix: Always cancel hanging processing instances instantly
+            // Force-flush any rendering locks before speaking next string
             window.speechSynthesis.cancel(); 
 
             const utterance = new SpeechSynthesisUtterance(text);
-            utterance.rate = 0.85; 
-            utterance.pitch = 1.05; 
             
             if (lang === 'en') {
                 utterance.lang = 'en-US';
+                utterance.rate = 0.90;  // Balanced speed profile for clear comprehension
+                utterance.pitch = 1.0;
+
+                if (window.speechSynthesis.getVoices) {
+                    const voices = window.speechSynthesis.getVoices();
+                    
+                    // Platform-aware priority logic (Windows, Chromebook, and iOS native profiles)
+                    let bestVoice = voices.find(v => v.lang.startsWith('en') && v.name.includes('Natural')) || // Windows Edge Natural
+                                    voices.find(v => v.lang.startsWith('en') && v.name.includes('Google')) ||  // ChromeOS High-Quality
+                                    voices.find(v => v.lang.startsWith('en') && v.name.includes('Samantha')) || // iOS Preferred Apple voice
+                                    voices.find(v => v.lang.toLowerCase().startsWith('en'));                  // standard baseline fallback
+                    
+                    if (bestVoice) utterance.voice = bestVoice;
+                }
             } else if (lang === 'es') {
+                // UNCHANGED SPANISH TTS CODE RULE EXPLICITLY APPLIED BELOW
                 utterance.lang = 'es-ES';
+                utterance.rate = 0.85; 
+                utterance.pitch = 1.05; 
+                if (window.speechSynthesis.getVoices) {
+                    const systemVoices = window.speechSynthesis.getVoices();
+                    let matchedVoice = systemVoices.find(v => v.lang.toLowerCase() === utterance.lang.toLowerCase() || v.lang.toLowerCase().startsWith(lang));
+                    if (matchedVoice) utterance.voice = matchedVoice;
+                }
             } else {
                 utterance.lang = lang;
             }
 
-            // High-Quality Voice Match Loop (Crucial for smooth English speech on ChromeOS)
-            if (window.speechSynthesis.getVoices) {
-                const systemVoices = window.speechSynthesis.getVoices();
-                
-                // Prioritize smooth local Google synthesis strings over basic system fallbacks
-                let optimalVoice = systemVoices.find(v => 
-                    v.lang.toLowerCase() === utterance.lang.toLowerCase() && 
-                    (v.name.toLowerCase().includes('google') || v.name.toLowerCase().includes('natural'))
-                );
-                
-                if (!optimalVoice) {
-                    optimalVoice = systemVoices.find(v => v.lang.toLowerCase().startsWith(lang));
-                }
-                
-                if (optimalVoice) utterance.voice = optimalVoice;
-            }
-
-            // Chromebook Fix: Encapsulate speech execute in a macro-timeout block to bypass sudden ChromeOS drops
+            // Cross-Platform Asynchronous Fire Trigger
             setTimeout(() => {
                 window.speechSynthesis.speak(utterance);
-            }, 30);
+            }, 50);
         }
 
-        // Prime Chromebook audio pipes on user interaction event
-        function primeChromebookAudioChannels() {
+        function primeGlobalAudioHardwareChannels() {
             if (window.speechSynthesis) {
                 window.speechSynthesis.getVoices();
-                // Play a brief silent string to clear ChromeOS audio sleep threads
-                const primer = new SpeechSynthesisUtterance('');
-                window.speechSynthesis.speak(primer);
+                const silencer = new SpeechSynthesisUtterance('');
+                window.speechSynthesis.speak(silencer);
             }
         }
-        document.body.addEventListener('click', primeChromebookAudioChannels, { once: true });
-        document.body.addEventListener('touchstart', primeChromebookAudioChannels, { once: true });
+        document.body.addEventListener('click', primeGlobalAudioHardwareChannels, { once: false });
+        document.body.addEventListener('touchstart', primeGlobalAudioHardwareChannels, { once: false });
 
         // --- 6. INTERACTIVE GAME MODE ENGINE ---
         function openQuizSetupModal(catId) {
