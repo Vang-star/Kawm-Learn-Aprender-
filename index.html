@@ -742,14 +742,14 @@
 
             let fallbackLocale = lang === 'es' ? 'es-MX' : 'en-US';
             
-            // Fixed neural audio endpoints with desktop/mobile client identifier headers spoofed via query parameter
+            // Re-routed BOTH English and Spanish through high-quality cloud translation voice channels
             let cloudSpeechUrl = lang === 'es' 
                 ? `https://translate.google.com/translate_tts?ie=UTF-8&tl=es-MX&client=tw-ob&ttsspeed=1&q=${encodeURIComponent(text)}`
                 : `https://translate.google.com/translate_tts?ie=UTF-8&tl=en-US&client=tw-ob&ttsspeed=1&q=${encodeURIComponent(text)}`;
 
             activeCloudAudioStream = new Audio(cloudSpeechUrl);
             activeCloudAudioStream.play().catch((err) => {
-                // If cloud engine fails, instantly use native onboard device speech fallback channel
+                // Native backup engine fallback
                 executeNativeTTSFallback(text, fallbackLocale);
             });
         }
