@@ -989,12 +989,10 @@
                 return;
             }
 
-            // Always flush running threads immediately to clear ChromeOS audio channels
             window.speechSynthesis.cancel();
 
             const utterance = new SpeechSynthesisUtterance(text);
             
-            // Re-fetch active device sound modules to capture ChromeOS dynamically initialized updates
             if (systemVoiceProfiles.length === 0) {
                 systemVoiceProfiles = window.speechSynthesis.getVoices();
             }
@@ -1003,31 +1001,26 @@
 
             if (lang === 'es') {
                 utterance.lang = 'es-ES';
-                // Try targeted hardware matches for ChromeOS built-in Spanish
                 foundVoice = systemVoiceProfiles.find(v => 
                     v.lang.startsWith('es') && 
                     (v.name.includes('Chrome OS') || v.name.includes('Google') || v.localService === true)
                 );
             } else {
                 utterance.lang = 'en-US';
-                // Try targeted hardware matches for ChromeOS built-in English
                 foundVoice = systemVoiceProfiles.find(v => 
                     v.lang.startsWith('en') && 
                     (v.name.includes('Chrome OS') || v.name.includes('Google') || v.localService === true)
                 );
             }
 
-            // Assign matching structural hardware handle profile if located successfully
             if (foundVoice) {
                 utterance.voice = foundVoice;
             }
 
-            // Optimization parameters for typical primary school environments
             utterance.rate = 0.92; 
             utterance.pitch = 1.0;
             utterance.volume = 1.0;
 
-            // Route execution down to the system controller
             window.speechSynthesis.speak(utterance);
         }
 
@@ -1120,7 +1113,8 @@
                 mediaBox.innerHTML = `<span style="font-size:3rem;">🖼️</span>`;
             }
 
-            let wrongChoicesPool = words.filter(w => w.id !== activeQuizTargetCard.id);
+            // --- FIXED: WRONG CHOICES POOLED STRICTLY FROM THE SAME CATEGORY ---
+            let wrongChoicesPool = words.filter(w => w.id !== activeQuizTargetCard.id && w.category === activeQuizTargetCard.category);
             wrongChoicesPool.sort(() => Math.random() - 0.5);
 
             let chosenAnswersList = [activeQuizTargetCard];
@@ -1128,12 +1122,18 @@
                 chosenAnswersList.push(wrongChoicesPool[i]);
             }
             
-            while(chosenAnswersList.length < 4) {
-                if (wrongChoicesPool.length > 0) {
-                    chosenAnswersList.push(wrongChoicesPool[Math.floor(Math.random() * wrongChoicesPool.length)]);
-                } else {
-                    chosenAnswersList.push({ id: "dummy-" + Math.random(), en: "???", hmo: "???", es: "???" });
+            // Failover Backup Plan: If the specific category runs out of items, pull from general dataset
+            if (chosenAnswersList.length < 4) {
+                let generalBackupPool = words.filter(w => !chosenAnswersList.some(selected => selected.id === w.id));
+                generalBackupPool.sort(() => Math.random() - 0.5);
+                while (chosenAnswersList.length < 4 && generalBackupPool.length > 0) {
+                    chosenAnswersList.push(generalBackupPool.pop());
                 }
+            }
+            
+            // Hard backup to safeguard against empty apps
+            while(chosenAnswersList.length < 4) {
+                chosenAnswersList.push({ id: "dummy-" + Math.random(), en: "???", hmo: "???", es: "???" });
             }
             
             chosenAnswersList.sort(() => Math.random() - 0.5);
