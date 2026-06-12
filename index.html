@@ -390,36 +390,39 @@
             resize: none;
         }
 
-        /* --- QUIZ ENGINE LOOKS AND FEEL --- */
-        .quiz-config-label {
-            font-weight: bold; margin-bottom: 8px; display: block; color: var(--dark);
+        /* --- MINI INTERACTIVE QUIZ WINDOW ENGINE --- */
+        #quiz-gameplay-modal .modal-card {
+            max-width: 380px !important; 
+            padding: 20px !important;   
         }
-        .quiz-lang-selector {
-            width: 100%; padding: 12px; font-size: 1.1rem; font-weight: bold; background: #fff;
-            border: 3px solid var(--secondary); border-radius: 15px; margin-bottom: 15px;
-        }
-        .btn-start-game {
-            background-color: #2ed573; box-shadow: 0 5px 0 #21a455; font-size: 1.3rem; width: 100%; padding: 12px; border-radius: 15px;
-        }
+
         .quiz-image-frame {
-            width: 100%; height: 200px; background: #f0f0f0; border-radius: 20px; overflow: hidden; margin-bottom: 20px;
-            border: 4px solid #e0e0e0; display: flex; align-items: center; justify-content: center;
+            width: 100%; 
+            height: 160px; 
+            background: #f0f0f0; 
+            border-radius: 18px; 
+            overflow: hidden; 
+            margin-bottom: 15px;
+            border: 3px solid #e0e0e0; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
         }
         .quiz-image-frame img, .quiz-image-frame video {
             width: 100%; height: 100%; object-fit: cover;
         }
         .quiz-options-stack {
-            display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;
+            display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px;
         }
         
         .quiz-choice-btn {
             background: #ffffff !important; 
             border: 3px solid #ccc !important; 
-            font-size: 1.3rem !important; 
+            font-size: 1.2rem !important; 
             font-weight: bold !important;
             color: var(--dark) !important;
-            padding: 14px; 
-            border-radius: 15px; 
+            padding: 10px; 
+            border-radius: 12px; 
             width: 100%; 
             box-shadow: 0 4px 0 #bbb; 
             text-align: center;
@@ -439,16 +442,26 @@
         .btn-submit-answer {
             background-color: #ffb142;
             box-shadow: 0 5px 0 #cc8e35;
-            font-size: 1.3rem;
+            font-size: 1.2rem;
             width: 100%;
-            padding: 12px;
-            border-radius: 15px;
+            padding: 10px;
+            border-radius: 12px;
             color: white;
             font-weight: bold;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
         }
         .quiz-score-banner {
-            font-size: 1.2rem; font-weight: bold; color: var(--dark); margin-bottom: 10px;
+            font-size: 1.1rem; font-weight: bold; color: var(--dark); margin-bottom: 8px;
+        }
+        .quiz-config-label {
+            font-weight: bold; margin-bottom: 6px; display: block; color: var(--dark); text-align: left;
+        }
+        .quiz-lang-selector {
+            width: 100%; padding: 10px; font-size: 1rem; font-weight: bold; background: #fff;
+            border: 3px solid var(--secondary); border-radius: 12px; margin-bottom: 15px;
+        }
+        .btn-start-game {
+            background-color: #2ed573; box-shadow: 0 5px 0 #21a455; font-size: 1.2rem; width: 100%; padding: 10px; border-radius: 12px;
         }
     </style>
 </head>
@@ -461,7 +474,7 @@
 
     <div class="mode-toggle-container">
         <button id="mode-toggle-btn" class="btn-mode-switch kids-active" onclick="toggleApplicationMode()">🔒 Kids Mode (Safe & Locked)</button>
-        <button class="btn-global-quiz" onclick="openQuizSetupModal('all')">🎮 Play Random Mix Quiz</button>
+        <button class="btn-global-quiz" onclick="openQuizSetupModal('all')">🎮 Open Quiz Hub</button>
     </div>
 
     <div class="creator-flex">
@@ -563,9 +576,12 @@
     <div class="modal-overlay" id="quiz-setup-modal">
         <div class="modal-card">
             <h2>🎮 Quiz Mode Setup</h2>
-            <p style="margin-bottom:15px;">Pick how you want to learn words today!</p>
+            <p style="margin-bottom:15px; font-size: 0.95rem;">Pick your categories and language to practice!</p>
             
-            <label class="quiz-config-label">Target Quiz Language:</label>
+            <label class="quiz-config-label">📁 Choose Topic / Category:</label>
+            <select class="quiz-lang-selector" id="quiz-category-config"></select>
+
+            <label class="quiz-config-label">🌍 Target Quiz Language:</label>
             <select class="quiz-lang-selector" id="quiz-lang-config">
                 <option value="en">English Only 🇺🇸</option>
                 <option value="hmo">Hmong Only 🌿</option>
@@ -580,7 +596,7 @@
     </div>
 
     <div class="modal-overlay" id="quiz-gameplay-modal">
-        <div class="modal-card" style="max-width: 480px;">
+        <div class="modal-card">
             <div class="quiz-score-banner" id="quiz-progress-text">Question 0 of 0</div>
             
             <div class="quiz-image-frame" id="quiz-media-display-frame">
@@ -592,7 +608,7 @@
                 </div>
 
             <button class="btn-submit-answer" id="quiz-check-btn" onclick="submitSelectedQuizAnswer()">✔️ Check Answer</button>
-            <button class="btn-close" style="background:#e74c3c;" onclick="terminateQuizGameplayLoop()">Exit Quiz 🛑</button>
+            <button class="btn-close" style="background:#e74c3c; width:100%; border-radius:12px; padding:10px; font-size:1.1rem;" onclick="terminateQuizGameplayLoop()">Exit Quiz 🛑</button>
         </div>
     </div>
 
@@ -607,10 +623,8 @@
         let activeAudioChunks = [];
         let currentlyPlayingCardId = null;
         let translationDebounceTimer = null;
-        let activeCloudAudioStream = null; 
 
         // --- GAME ARCHITECTURE VARIABLE SYSTEM STATE ---
-        let currentQuizCategory = "all";
         let quizLangMode = "en"; 
         let activeQuizCardSubset = [];
         let activeQuizIndex = 0;
@@ -637,7 +651,6 @@
                 ];
                 
                 words = [
-                    // --- ANIMALS COLLECTION ---
                     { id: "a1", category: "animals", en: "Dog", hmo: "Aub", es: "Perro", media: "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=400", mediaType: "image", audioDataUrl: null },
                     { id: "a2", category: "animals", en: "Cat", hmo: "Miv", es: "Gato", media: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=400", mediaType: "image", audioDataUrl: null },
                     { id: "a3", category: "animals", en: "Duck", hmo: "Bws", es: "Pato", media: "https://images.unsplash.com/photo-1563409236302-8442b5e644df?w=400", mediaType: "image", audioDataUrl: null },
@@ -645,26 +658,16 @@
                     { id: "a5", category: "animals", en: "Cow", hmo: "Nyuj", es: "Vaca", media: "https://images.unsplash.com/photo-1570042225831-d98fa7577f1e?w=400", mediaType: "image", audioDataUrl: null },
                     { id: "a6", category: "animals", en: "Pig", hmo: "Npua", es: "Cerdo", media: "https://images.unsplash.com/photo-1604848698030-c434ba08ece1?w=400", mediaType: "image", audioDataUrl: null },
                     
-                    // --- NUMBERS COLLECTION (1 - 10) ---
                     { id: "n1", category: "numbers", en: "One", hmo: "Ib", es: "Uno", media: "https://images.unsplash.com/photo-1509228468518-180dd4864904?w=400", mediaType: "image", audioDataUrl: null },
                     { id: "n2", category: "numbers", en: "Two", hmo: "Ob", es: "Dos", media: "https://images.unsplash.com/photo-1590134651918-199b0c201d4a?w=400", mediaType: "image", audioDataUrl: null },
                     { id: "n3", category: "numbers", en: "Three", hmo: "Peb", es: "Tres", media: "https://images.unsplash.com/photo-1551817823-38c205566f10?w=400", mediaType: "image", audioDataUrl: null },
                     { id: "n4", category: "numbers", en: "Four", hmo: "Plau", es: "Cuatro", media: "https://images.unsplash.com/photo-1563245372-f21724e3856d?w=400", mediaType: "image", audioDataUrl: null },
                     { id: "n5", category: "numbers", en: "Five", hmo: "Kuv", es: "Cinco", media: "https://images.unsplash.com/photo-1533035353820-2f06124eff30?w=400", mediaType: "image", audioDataUrl: null },
-                    { id: "n6", category: "numbers", en: "Six", hmo: "Rau", es: "Seis", media: "https://images.unsplash.com/photo-1607622646698-333e60155b46?w=400", mediaType: "image", audioDataUrl: null },
-                    { id: "n7", category: "numbers", en: "Seven", hmo: "Xya", es: "Siete", media: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400", mediaType: "image", audioDataUrl: null },
-                    { id: "n8", category: "numbers", en: "Eight", hmo: "Yim", es: "Ocho", media: "https://images.unsplash.com/photo-1542840843-33bc8b2374e5?w=400", mediaType: "image", audioDataUrl: null },
-                    { id: "n9", category: "numbers", en: "Nine", hmo: "Kuj", es: "Nueve", media: "https://images.unsplash.com/photo-1628157582853-a796fa650a6a?w=400", mediaType: "image", audioDataUrl: null },
-                    { id: "n10", category: "numbers", en: "Ten", hmo: "Kaum", es: "Diez", media: "https://images.unsplash.com/photo-1502086223501-7ea6ecd79368?w=400", mediaType: "image", audioDataUrl: null },
-
-                    // --- COLORS COLLECTION (7) ---
+                    
                     { id: "c1", category: "colors", en: "Red", hmo: "Liab", es: "Rojo", media: "https://images.unsplash.com/photo-1525909002-1b05e0c869d8?w=400", mediaType: "image", audioDataUrl: null },
                     { id: "c2", category: "colors", en: "Blue", hmo: "Xiav", es: "Azul", media: "https://images.unsplash.com/photo-1523821741446-edb2b68bb7a0?w=400", mediaType: "image", audioDataUrl: null },
                     { id: "c3", category: "colors", en: "Green", hmo: "Ntsuab", es: "Verde", media: "https://images.unsplash.com/photo-1533038590840-1cde6e668a91?w=400", mediaType: "image", audioDataUrl: null },
-                    { id: "c4", category: "colors", en: "Yellow", hmo: "Daj", es: "Amarillo", media: "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=400", mediaType: "image", audioDataUrl: null },
-                    { id: "c5", category: "colors", en: "Orange", hmo: "Kab ntsab", es: "Naranja", media: "https://images.unsplash.com/photo-1557672172-298e090bd0f1?w=400", mediaType: "image", audioDataUrl: null },
-                    { id: "c6", category: "colors", en: "Purple", hmo: "Puv liab", es: "Morado", media: "https://images.unsplash.com/photo-1516550893923-42d28e5677af?w=400", mediaType: "image", audioDataUrl: null },
-                    { id: "c7", category: "colors", en: "Pink", hmo: "Liab dawb", es: "Rosa", media: "https://images.unsplash.com/photo-1534531173927-aeb928d54385?w=400", mediaType: "image", audioDataUrl: null }
+                    { id: "c4", category: "colors", en: "Yellow", hmo: "Daj", es: "Amarillo", media: "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=400", mediaType: "image", audioDataUrl: null }
                 ];
             }
             renderCategoryFilters();
@@ -675,11 +678,9 @@
         function generateCleanJsonBlock() {
             const packageObj = { categories: categories, words: words };
             const jsonString = JSON.stringify(packageObj, null, 2);
-            
             const txtArea = document.getElementById('json-export-area');
             txtArea.value = jsonString;
             txtArea.select();
-            
             navigator.clipboard.writeText(jsonString);
             alert("Code generated and copied automatically! Paste this inside your flashcards.json file on GitHub.");
         }
@@ -710,7 +711,6 @@
                     e.preventDefault();
                     button.classList.remove('drag-over');
                     if (cat.id === 'all') return;
-                    
                     const cardIdStr = e.dataTransfer.getData('text/plain');
                     if (cardIdStr) moveCardToCategory(cardIdStr, cat.id);
                 };
@@ -722,7 +722,13 @@
         function populateCategorySelectDropdowns() {
             const addDropdown = document.getElementById('add-category-select');
             const moveDropdown = document.getElementById('move-modal-select');
-            addDropdown.innerHTML = ''; moveDropdown.innerHTML = '';
+            const quizDropdown = document.getElementById('quiz-category-config');
+            
+            addDropdown.innerHTML = ''; moveDropdown.innerHTML = ''; quizDropdown.innerHTML = '';
+
+            // Add comprehensive "All" choice directly inside game selector
+            const allOpt = document.createElement('option'); allOpt.value = 'all'; allOpt.innerText = "⭐ Mix All Categories Together";
+            quizDropdown.appendChild(allOpt);
 
             categories.forEach(cat => {
                 if(cat.id !== 'all') {
@@ -730,6 +736,8 @@
                     addDropdown.appendChild(opt1);
                     const opt2 = document.createElement('option'); opt2.value = cat.id; opt2.innerText = `${cat.icon} ${cat.name}`;
                     moveDropdown.appendChild(opt2);
+                    const opt3 = document.createElement('option'); opt3.value = cat.id; opt3.innerText = `${cat.icon} ${cat.name}`;
+                    quizDropdown.appendChild(opt3);
                 }
             });
         }
@@ -751,7 +759,6 @@
             const cleanId = nameInput.toLowerCase().replace(/[^a-z0-9]/g, '-');
 
             categories.push({ id: cleanId, name: nameInput, icon: iconInput });
-            
             document.getElementById('cat-icon').value = ''; 
             document.getElementById('cat-name').value = '';
             
@@ -766,7 +773,6 @@
             const expPanel = document.getElementById('export-panel');
 
             if (isKidsMode) {
-                // FIXED: Changed passkey conditional validation check to kuvelpassword
                 if (prompt("Parents: Enter passcode:") !== "kuvelpassword") return alert("Wrong passcode!");
                 isKidsMode = false;
                 toggleBtn.innerText = "🔓 Parent Mode (Editing Open)";
@@ -824,7 +830,6 @@
             });
         }
 
-        // --- 4. FIXED DUAL AUTO-TRANSLATION PIPELINE ---
         function handleDualAutoTranslation() {
             const typedText = document.getElementById('add-en').value.trim();
             clearTimeout(translationDebounceTimer);
@@ -881,57 +886,52 @@
         function finalizeNewWord(id, catId, en, hmo, es, media, type) {
             words.push({ id, category: catId, en, hmo, es, media, mediaType: type, audioDataUrl: null });
             renderCards();
-
             document.getElementById('add-en').value = ''; 
             document.getElementById('add-hmo').value = ''; 
             document.getElementById('add-es').value = ''; 
             document.getElementById('add-media').value = '';
         }
 
-        // --- 5. PERMANENT TEXT-TO-SPEECH (TTS) SYSTEM ---
+        // --- 5. ROBUST HYBRID TEXT-TO-SPEECH (TTS) SYSTEM FOR MOBILE & TABLETS ---
         function speakTTS(text, lang) {
-            window.speechSynthesis.cancel();
-            if (activeCloudAudioStream) {
-                activeCloudAudioStream.pause();
-                activeCloudAudioStream = null;
-            }
+            if (!window.speechSynthesis) return;
+            window.speechSynthesis.cancel(); // Terminate hanging cues immediately
 
-            if (lang === 'en') {
-                executeNativeTTSFallback(text, 'en-US');
-                return;
-            }
-
-            let cloudSpeechUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=es&client=paws&tk=&ttsspeed=1&q=${encodeURIComponent(text)}`;
-
-            activeCloudAudioStream = new Audio(cloudSpeechUrl);
-            activeCloudAudioStream.play().catch((err) => {
-                executeNativeTTSFallback(text, 'es-MX');
-            });
-        }
-
-        function executeNativeTTSFallback(text, fallbackLocale) {
             const utterance = new SpeechSynthesisUtterance(text);
-            utterance.rate = 0.82; 
-            utterance.pitch = 1.10; 
-            utterance.lang = fallbackLocale;
+            utterance.rate = 0.85; 
+            utterance.pitch = 1.05; 
+            
+            // Map clean locales explicitly to bypass hidden engine crashes on iOS or Android WebViews
+            if (lang === 'en') {
+                utterance.lang = 'en-US';
+            } else if (lang === 'es') {
+                utterance.lang = 'es-ES';
+            } else {
+                utterance.lang = lang;
+            }
 
+            // Cross-device voice search loop
             if (window.speechSynthesis.getVoices) {
                 const systemVoices = window.speechSynthesis.getVoices();
-                let optimalVoice = systemVoices.find(v => 
-                    v.lang.toLowerCase().includes(fallbackLocale.toLowerCase()) && 
-                    (v.name.toLowerCase().includes('natural') || v.name.toLowerCase().includes('premium') || v.name.toLowerCase().includes('google'))
-                );
-                if (!optimalVoice) {
-                    optimalVoice = systemVoices.find(v => v.lang.toLowerCase().startsWith(fallbackLocale.substring(0,2)));
-                }
-                if (optimalVoice) utterance.voice = optimalVoice;
+                let matchedVoice = systemVoices.find(v => v.lang.toLowerCase() === utterance.lang.toLowerCase() || v.lang.toLowerCase().startsWith(lang));
+                if (matchedVoice) utterance.voice = matchedVoice;
             }
+
             window.speechSynthesis.speak(utterance);
         }
 
+        // Force-refresh browser audio channels on first tap interaction
+        document.body.addEventListener('click', () => {
+            if (window.speechSynthesis && window.speechSynthesis.getVoices) {
+                window.speechSynthesis.getVoices();
+            }
+        }, { once: true });
+
         // --- 6. INTERACTIVE GAME MODE ENGINE ---
         function openQuizSetupModal(catId) {
-            currentQuizCategory = catId;
+            if (catId) {
+                document.getElementById('quiz-category-config').value = catId;
+            }
             document.getElementById('quiz-setup-modal').classList.add('active');
         }
 
@@ -941,15 +941,16 @@
 
         function initiateQuizGameplayLoop() {
             quizLangMode = document.getElementById('quiz-lang-config').value;
+            const chosenCategory = document.getElementById('quiz-category-config').value;
             
-            if (currentQuizCategory === 'all') {
+            if (chosenCategory === 'all') {
                 activeQuizCardSubset = [...words];
             } else {
-                activeQuizCardSubset = words.filter(w => w.category === currentQuizCategory);
+                activeQuizCardSubset = words.filter(w => w.category === chosenCategory);
             }
 
             if (activeQuizCardSubset.length === 0) {
-                alert("This category has no cards to quiz yet! Add some cards first.");
+                alert("This topic has no flashcards yet! Choose another category or add cards to it first.");
                 return;
             }
 
@@ -969,7 +970,6 @@
         function loadNextQuizQuestion() {
             targetChoiceBtnBlocked = false;
             currentlySelectedCardId = null;
-            
             document.getElementById('quiz-check-btn').style.display = 'block';
             
             if (activeQuizIndex >= activeQuizCardSubset.length) {
@@ -998,7 +998,7 @@
             mediaBox.innerHTML = '';
             if (activeQuizTargetCard.media) {
                 if (activeQuizTargetCard.mediaType === 'video') {
-                    mediaBox.innerHTML = `<video src="${activeQuizTargetCard.media}" autoplay muted loop></video>`;
+                    mediaBox.innerHTML = `<video src="${activeQuizTargetCard.media}" autoplay muted loop playsinline></video>`;
                 } else {
                     mediaBox.innerHTML = `<img src="${activeQuizTargetCard.media}">`;
                 }
@@ -1006,7 +1006,7 @@
                 mediaBox.innerHTML = `<span style="font-size:3rem;">🖼️</span>`;
             }
 
-            let wrongChoicesPool = words.filter(w => w.id !== activeQuizTargetCard.id && w.category === activeQuizTargetCard.category);
+            let wrongChoicesPool = words.filter(w => w.id !== activeQuizTargetCard.id);
             wrongChoicesPool.sort(() => Math.random() - 0.5);
 
             let chosenAnswersList = [activeQuizTargetCard];
@@ -1018,7 +1018,7 @@
                 if (wrongChoicesPool.length > 0) {
                     chosenAnswersList.push(wrongChoicesPool[Math.floor(Math.random() * wrongChoicesPool.length)]);
                 } else {
-                    chosenAnswersList.push({ id: "dummy-" + Math.random(), en: "???", hmo: "???", es: "???", category: activeQuizTargetCard.category });
+                    chosenAnswersList.push({ id: "dummy-" + Math.random(), en: "???", hmo: "???", es: "???" });
                 }
             }
             
@@ -1038,7 +1038,6 @@
                     if (activeQuizTargetLang === 'hmo') {
                         if (cardOption.audioDataUrl) {
                             window.speechSynthesis.cancel();
-                            if (activeCloudAudioStream) { activeCloudAudioStream.pause(); activeCloudAudioStream = null; }
                             const choiceAudio = new Audio(cardOption.audioDataUrl);
                             choiceAudio.play();
                         } else {
@@ -1095,7 +1094,7 @@
             setTimeout(() => {
                 activeQuizIndex++;
                 loadNextQuizQuestion();
-            }, 2000);
+            }, 1800);
         }
 
         function terminateQuizGameplayLoop() {
