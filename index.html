@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kids Multilingual Flashcards (GitHub JSON Edition)</title>
+    <title>Kids Multilingual Flashcards (ChromeOS Local Hardware Voice Edition)</title>
     <style>
         :root {
             --primary: #ff6b6b;
@@ -641,7 +641,7 @@
         let activeAudioChunks = [];
         let currentlyPlayingCardId = null;
         let translationDebounceTimer = null;
-        let cachedSystemVoices = [];
+        let systemVoiceProfiles = [];
 
         // --- GAME ARCHITECTURE VARIABLE SYSTEM STATE ---
         let quizLangMode = "en"; 
@@ -654,7 +654,17 @@
         let currentlySelectedCardId = null;
         let questionFirstAttempt = true;
 
-        // --- 2. GITHUB JSON INPUT LOADER ---
+        // --- 2. HARDWARE CHROMEOOS NATIVE VOICE INITIALIZER ---
+        function loadHardwareVoiceProfiles() {
+            if (typeof speechSynthesis === 'undefined') return;
+            systemVoiceProfiles = speechSynthesis.getVoices();
+        }
+        loadHardwareVoiceProfiles();
+        if (typeof speechSynthesis !== 'undefined' && speechSynthesis.onvoiceschanged !== undefined) {
+            speechSynthesis.onvoiceschanged = loadHardwareVoiceProfiles;
+        }
+
+        // --- 3. GITHUB JSON INPUT LOADER ---
         async function fetchMasterJsonData() {
             try {
                 const response = await fetch('flashcards.json?nocache=' + Date.now());
@@ -705,7 +715,7 @@
             alert("Code generated and copied automatically! Paste this inside your flashcards.json file on GitHub.");
         }
 
-        // --- 3. UI RENDERING PIPELINE ---
+        // --- 4. UI RENDERING PIPELINE ---
         function renderCategoryFilters() {
             const filterRow = document.getElementById('category-filters-row');
             filterRow.innerHTML = '';
@@ -972,33 +982,53 @@
             document.getElementById('add-media').value = '';
         }
 
-        // --- 4. HIGH-PERFORMANCE AUDIO STREAM ENGINE (FIXED FOR CHROMEONS) ---
+        // --- 5. FIXED HARDWARE TEXT-TO-SPEECH ROUTER FOR CHROMEONS ---
         function speakTTS(text, lang) {
-            if (window.speechSynthesis) {
-                window.speechSynthesis.cancel();
+            if (!('speechSynthesis' in window)) {
+                console.warn("Browser environment does not support Web Speech API Synthesis.");
+                return;
             }
 
-            let targetLocale = 'en';
-            if (lang === 'es') targetLocale = 'es';
-            if (lang === 'en') targetLocale = 'en';
+            // Always flush running threads immediately to clear ChromeOS audio channels
+            window.speechSynthesis.cancel();
 
-            const encText = encodeURIComponent(text);
-            const audioUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=${targetLocale}&client=tw-ob&q=${encText}`;
-
-            try {
-                const streamPlayer = new Audio(audioUrl);
-                streamPlayer.volume = 1.0;
-                streamPlayer.play().catch(err => {
-                    console.log("ChromeOS Sandbox standard backup triggered...", err);
-                    if (window.speechSynthesis) {
-                        const backupUtterance = new SpeechSynthesisUtterance(text);
-                        backupUtterance.lang = targetLocale === 'es' ? 'es-ES' : 'en-US';
-                        window.speechSynthesis.speak(backupUtterance);
-                    }
-                });
-            } catch (e) {
-                console.error("Audio redirection fatal crash: ", e);
+            const utterance = new SpeechSynthesisUtterance(text);
+            
+            // Re-fetch active device sound modules to capture ChromeOS dynamically initialized updates
+            if (systemVoiceProfiles.length === 0) {
+                systemVoiceProfiles = window.speechSynthesis.getVoices();
             }
+
+            let foundVoice = null;
+
+            if (lang === 'es') {
+                utterance.lang = 'es-ES';
+                // Try targeted hardware matches for ChromeOS built-in Spanish
+                foundVoice = systemVoiceProfiles.find(v => 
+                    v.lang.startsWith('es') && 
+                    (v.name.includes('Chrome OS') || v.name.includes('Google') || v.localService === true)
+                );
+            } else {
+                utterance.lang = 'en-US';
+                // Try targeted hardware matches for ChromeOS built-in English
+                foundVoice = systemVoiceProfiles.find(v => 
+                    v.lang.startsWith('en') && 
+                    (v.name.includes('Chrome OS') || v.name.includes('Google') || v.localService === true)
+                );
+            }
+
+            // Assign matching structural hardware handle profile if located successfully
+            if (foundVoice) {
+                utterance.voice = foundVoice;
+            }
+
+            // Optimization parameters for typical primary school environments
+            utterance.rate = 0.92; 
+            utterance.pitch = 1.0;
+            utterance.volume = 1.0;
+
+            // Route execution down to the system controller
+            window.speechSynthesis.speak(utterance);
         }
 
         function primeGlobalAudioHardwareChannels() {
@@ -1010,7 +1040,7 @@
         document.body.addEventListener('click', primeGlobalAudioHardwareChannels, { once: false });
         document.body.addEventListener('touchstart', primeGlobalAudioHardwareChannels, { once: false });
 
-        // --- 5. INTERACTIVE GAME MODE ENGINE ---
+        // --- 6. INTERACTIVE GAME MODE ENGINE ---
         function openQuizSetupModal(catId) {
             if (catId) {
                 document.getElementById('quiz-category-config').value = catId;
@@ -1191,7 +1221,7 @@
             }
         }
 
-        // --- 6. MANAGEMENT HANDLERS ---
+        // --- 7. MANAGEMENT HANDLERS ---
         function openAudioModal(id) {
             currentActiveId = id;
             const wordObj = words.find(w => w.id === id);
